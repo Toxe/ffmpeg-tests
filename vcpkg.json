@@ -1,0 +1,11 @@
+{
+    "name": "ffmpeg-video-info",
+    "version": "0.0.1",
+    "dependencies": [
+        {
+            "name": "fmt",
+            "version>=": "8.0.1"
+        }
+    ],
+    "builtin-baseline": "680de654a94501315a001c83ba7abf0c677e98ae"
+}
