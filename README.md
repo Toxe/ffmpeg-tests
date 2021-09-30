@@ -1,9 +1,9 @@
 # FFmpeg Video Info
 
-A short program that outputs video information using FFmpeg `libav`.
+Short program that outputs video information using FFmpeg `libavcodec`.
 
 ```
-$ ./build/src/ffmpeg_video_info video.mp4
+$ ffmpeg_video_info video.mp4
 filename: video.mp4
 format: QuickTime / MOV
 duration: 10600000
