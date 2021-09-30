@@ -5,7 +5,11 @@
         {
             "name": "fmt",
             "version>=": "8.0.1"
+        },
+        {
+            "name": "ffmpeg",
+            "version>=": "4.4#14"
         }
     ],
-    "builtin-baseline": "680de654a94501315a001c83ba7abf0c677e98ae"
+    "builtin-baseline": "33f02c0ae50c262da487d21ace4f5d67ae949c18"
 }
