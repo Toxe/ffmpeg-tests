@@ -1,4 +1,4 @@
-# FFmpeg Video Info
+# FFmpeg Tests
 
 Short program that outputs video information using FFmpeg `libavcodec`.
 

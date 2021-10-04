@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-project("FFmpeg Video Info" LANGUAGES CXX)
+project("FFmpeg Tests" LANGUAGES CXX)
 
 # adjust or override some CMake defaults
 include(cmake/OverrideCMakeDefaults.cmake)
