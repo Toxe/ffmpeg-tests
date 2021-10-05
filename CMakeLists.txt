@@ -18,4 +18,4 @@ include(cmake/Sanitizers.cmake)
 find_package(fmt CONFIG REQUIRED)
 find_package(FFMPEG REQUIRED)
 
-add_subdirectory(src)
+add_subdirectory(src/file_info)

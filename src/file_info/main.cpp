@@ -31,20 +31,23 @@ int main(int argc, char* argv[])
 {
     std::string_view filename = eval_args(argc, argv);
 
+    // allocate format context
     std::unique_ptr<AVFormatContext, void (*)(AVFormatContext*)> format_context(avformat_alloc_context(), [](AVFormatContext* fmt_ctx) { avformat_close_input(&fmt_ctx); });
 
     if (!format_context)
         die("avformat_alloc_context");
 
-    auto p1 = format_context.get();
+    // open input file
+    auto p_ctx = format_context.get();
 
-    if (avformat_open_input(&p1, filename.data(), nullptr, nullptr) < 0)
+    if (avformat_open_input(&p_ctx, filename.data(), nullptr, nullptr) < 0)
         die("avformat_open_input");
 
     fmt::print("filename: {}\n", format_context->url);
     fmt::print("format: {}\n", format_context->iformat->long_name);
     fmt::print("duration: {}\n", format_context->duration);
 
+    // load stream info
     if (avformat_find_stream_info(format_context.get(), nullptr) < 0)
         die("avformat_find_stream_info");
 
