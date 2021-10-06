@@ -19,3 +19,4 @@ find_package(fmt CONFIG REQUIRED)
 find_package(FFMPEG REQUIRED)
 
 add_subdirectory(src/file_info)
+add_subdirectory(src/decode_video)
