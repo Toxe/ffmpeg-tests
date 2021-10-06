@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
 {
     std::string_view filename = eval_args(argc, argv);
 
-    AudioWriter audio_writer{"audio.dump"};
+    AudioWriter audio_writer{"audio.raw"};
     ScreenshotWriter screenshot_writer("screenshot.raw");
 
     if (decode_file(filename, audio_writer, screenshot_writer) < 0)
