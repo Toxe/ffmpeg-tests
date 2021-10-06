@@ -90,10 +90,8 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     // send packet to the decoder
     int ret = avcodec_send_packet(codec_context, packet);
 
-    if (ret < 0) {
-        fmt::print("error: avcodec_send_packet\n");
-        return ret;
-    }
+    if (ret < 0)
+        return show_error("avcodec_send_packet", ret);
 
     // get all available frames from the decoder
     while (ret >= 0) {
@@ -103,8 +101,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
                 return 0;
 
-            fmt::print("error: avcodec_receive_frame\n");
-            return ret;
+            return show_error("avcodec_receive_frame", ret);
         }
 
         // write frame to file
