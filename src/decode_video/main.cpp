@@ -40,13 +40,13 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     std::exit(2);
 }
 
-[[nodiscard]] std::tuple<int, const AVStream*, auto_delete_ressource<AVCodecContext>> find_best_stream(AVFormatContext* format_context, const AVMediaType type)
+[[nodiscard]] std::tuple<int, auto_delete_ressource<AVCodecContext>> find_best_stream(AVFormatContext* format_context, const AVMediaType type)
 {
     const int stream_index = av_find_best_stream(format_context, type, -1, -1, nullptr, 0);
 
     if (stream_index < 0) {
         show_error(fmt::format("av_find_best_stream [{}]", av_get_media_type_string(type)), stream_index);
-        return std::make_tuple(-1, nullptr, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
+        return std::make_tuple(-1, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
     }
 
     // find decoder for stream
@@ -55,7 +55,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     if (!decoder) {
         show_error(fmt::format("avcodec_find_decoder [{}]", av_get_media_type_string(type)));
-        return std::make_tuple(-1, nullptr, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
+        return std::make_tuple(-1, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
     }
 
     // allocate codec context for decoder
@@ -63,7 +63,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     if (!codec_context) {
         show_error(fmt::format("avcodec_alloc_context3 [{}]", av_get_media_type_string(type)));
-        return std::make_tuple(-1, nullptr, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
+        return std::make_tuple(-1, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
     }
 
     // copy codec parameters from input stream to codec context
@@ -71,7 +71,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     if (ret < 0) {
         show_error(fmt::format("avcodec_parameters_to_context [{}]", av_get_media_type_string(type)), ret);
-        return std::make_tuple(-1, nullptr, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
+        return std::make_tuple(-1, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
     }
 
     // init decoder
@@ -79,10 +79,10 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     if (ret < 0) {
         show_error(fmt::format("avcodec_open2 [{}]", av_get_media_type_string(type)), ret);
-        return std::make_tuple(-1, nullptr, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
+        return std::make_tuple(-1, auto_delete_ressource<AVCodecContext>(nullptr, nullptr));
     }
 
-    return std::make_tuple(stream_index, stream, std::move(codec_context));
+    return std::make_tuple(stream_index, std::move(codec_context));
 }
 
 [[nodiscard]] int decode_packet(AVCodecContext* codec_context, const AVPacket* packet, AVFrame* frame, OutputWriter& output_writer)
@@ -156,8 +156,8 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     av_dump_format(format_context.get(), 0, filename.data(), 0);
 
     // find best audio and video stream
-    auto [video_stream_index, video_stream, video_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_VIDEO);
-    auto [audio_stream_index, audio_stream, audio_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_AUDIO);
+    auto [video_stream_index, video_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_VIDEO);
+    auto [audio_stream_index, audio_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_AUDIO);
 
     if (video_stream_index < 0 || audio_stream_index < 0)
         return show_error("unable to find streams");
