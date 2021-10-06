@@ -12,6 +12,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
 }
 
 #include "audio_writer.hpp"
@@ -161,7 +162,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     if (video_stream_index < 0 || audio_stream_index < 0)
         return show_error("unable to find streams");
 
-    // allocate buffer for decoded images
+    // allocate buffer for decoded source images
     std::array<uint8_t*, 4> img_buf_data = {nullptr};
     std::array<int, 4> img_buf_linesize;
 
@@ -170,7 +171,22 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     if (img_buf_size < 0)
         return show_error("av_image_alloc", img_buf_size);
 
-    screenshot_writer.set_image_buffer(img_buf_data, img_buf_linesize, img_buf_size);
+    // allocate buffer for scaled output images
+    std::array<uint8_t*, 4> dst_buf_data = {nullptr};
+    std::array<int, 4> dst_buf_linesize;
+
+    const int dst_buf_size = av_image_alloc(dst_buf_data.data(), dst_buf_linesize.data(), video_codec_context->width, video_codec_context->height, AV_PIX_FMT_RGB24, 1);
+
+    if (img_buf_size < 0)
+        return show_error("av_image_alloc", dst_buf_size);
+
+    // create scaling context
+    auto_delete_ressource<SwsContext> scaling_context(sws_getContext(video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, video_codec_context->width, video_codec_context->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nullptr, nullptr, nullptr), [](SwsContext* ctx) { sws_freeContext(ctx); });
+
+    if (!scaling_context)
+        return show_error("sws_getContext");
+
+    screenshot_writer.set_image_buffer(img_buf_data, img_buf_linesize, img_buf_size, dst_buf_data, dst_buf_linesize, dst_buf_size, scaling_context.get());
 
     auto_delete_ressource<AVFrame> frame(av_frame_alloc(), [](AVFrame* f) { av_frame_free(&f); });
 
@@ -199,6 +215,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
         }
     }
 
+    av_free(dst_buf_data[0]);
     av_free(img_buf_data[0]);
 
     return ret;
