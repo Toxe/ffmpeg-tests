@@ -1,6 +1,12 @@
 add_executable(threaded_stream_reader
     main.cpp
+    audio_stream.cpp audio_stream.hpp
+    auto_delete_ressource.hpp
     error.cpp error.hpp
+    types.hpp
+    video_content_provider.cpp video_content_provider.hpp
+    video_file.cpp video_file.hpp
+    video_stream.cpp video_stream.hpp
 )
 
 set_target_properties(threaded_stream_reader PROPERTIES CXX_EXTENSIONS OFF)

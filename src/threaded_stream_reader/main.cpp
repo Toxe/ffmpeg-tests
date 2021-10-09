@@ -2,6 +2,8 @@
 #include <string_view>
 
 #include "error.hpp"
+#include "video_content_provider.hpp"
+#include "video_file.hpp"
 
 [[nodiscard]] std::string_view eval_args(int argc, char* argv[])
 {
@@ -17,4 +19,7 @@
 int main(int argc, char* argv[])
 {
     std::string_view filename = eval_args(argc, argv);
+
+    VideoFile video_file(filename);
+    VideoContentProvider video_content_provider(video_file.open_stream());
 }
