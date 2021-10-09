@@ -20,3 +20,4 @@ find_package(FFMPEG REQUIRED)
 
 add_subdirectory(src/file_info)
 add_subdirectory(src/decode_video)
+add_subdirectory(src/threaded_stream_reader)
