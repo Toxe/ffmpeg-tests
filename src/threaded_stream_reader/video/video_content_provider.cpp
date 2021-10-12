@@ -1,7 +1,7 @@
 #include "video_content_provider.hpp"
 
 #include "audio_stream.hpp"
-#include "error.hpp"
+#include "error/error.hpp"
 #include "video_stream.hpp"
 
 VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream)

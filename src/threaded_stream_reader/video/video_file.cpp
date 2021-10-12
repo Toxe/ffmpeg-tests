@@ -5,7 +5,7 @@
 
 #include <fmt/core.h>
 
-#include "error.hpp"
+#include "error/error.hpp"
 
 VideoFile::VideoFile(const std::string_view& full_filename)
 {

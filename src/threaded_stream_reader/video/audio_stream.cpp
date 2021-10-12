@@ -1,6 +1,6 @@
 #include "audio_stream.hpp"
 
-#include "error.hpp"
+#include "error/error.hpp"
 
 AudioStream::AudioStream(AVFormatContext* format_context, AVCodecContext* codec_context, int stream_index)
     : format_context_{format_context}, codec_context_{codec_context}, stream_index_{stream_index}

@@ -1,9 +1,9 @@
 #include <filesystem>
 #include <string_view>
 
-#include "error.hpp"
-#include "video_content_provider.hpp"
-#include "video_file.hpp"
+#include "error/error.hpp"
+#include "video/video_content_provider.hpp"
+#include "video/video_file.hpp"
 
 [[nodiscard]] std::string_view eval_args(int argc, char* argv[])
 {

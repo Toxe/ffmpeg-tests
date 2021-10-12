@@ -2,7 +2,7 @@
 
 #include <fmt/core.h>
 
-#include "error.hpp"
+#include "error/error.hpp"
 
 VideoStream::VideoStream(AVFormatContext* format_context, AVCodecContext* codec_context, int stream_index)
     : format_context_{format_context}, codec_context_{codec_context}, stream_index_{stream_index}
