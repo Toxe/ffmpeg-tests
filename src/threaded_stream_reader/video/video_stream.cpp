@@ -1,6 +1,6 @@
 #include "video_stream.hpp"
 
-#include <fmt/core.h>
+#include <spdlog/spdlog.h>
 
 #include "error/error.hpp"
 
@@ -13,7 +13,7 @@ VideoStream::VideoStream(AVFormatContext* format_context, AVCodecContext* codec_
 
 int VideoStream::resize_scaling_context(AVCodecContext* codec_context, int width, int height)
 {
-    fmt::print("resize scaling context to {}x{}\n", width, height);
+    spdlog::debug("resize scaling context to {}x{}", width, height);
 
     scale_width_ = width;
     scale_height_ = height;
