@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+#include <optional>
 #include <thread>
 #include <vector>
 
@@ -16,6 +18,8 @@ class AudioStream;
 class VideoStream;
 
 class VideoContentProvider {
+    std::mutex mtx_;
+
     bool running_ = false;
     std::thread thread_;
 
@@ -44,4 +48,6 @@ public:
     void join();
 
     bool read(ImageSize video_size);
+
+    [[nodiscard]] std::optional<VideoFrame> next_frame(const double playback_position);
 };

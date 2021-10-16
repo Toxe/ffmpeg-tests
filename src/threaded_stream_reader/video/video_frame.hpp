@@ -1,10 +1,9 @@
 #pragma once
 
 #include <cstdint>
-#include <vector>
 
 struct VideoFrame {
-    std::vector<uint8_t> data_;
+    uint8_t* rgba_;
     int width_;
     int height_;
     int64_t dts_;

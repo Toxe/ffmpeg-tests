@@ -88,11 +88,31 @@ bool VideoContentProvider::read(ImageSize video_size)
 
 void VideoContentProvider::add_video_frame(VideoFrame&& video_frame)
 {
-    spdlog::debug("VideoContentProvider: new video frame, {}x{}, dts={}, pts={}, best_effort_timestamp={} --> timestamp={:.3f} ({} frames available)",
+    std::lock_guard<std::mutex> lock(mtx_);
+
+    spdlog::debug("VideoContentProvider: new video frame, {}x{}, dts={}, pts={}, best_effort_timestamp={} --> timestamp={:.4f} ({} frames available)",
         video_frame.width_, video_frame.height_,
         video_frame.dts_, video_frame.pts_, video_frame.best_effort_timestamp_,
         video_frame.timestamp_,
         video_frames_.size());
 
     video_frames_.push_back(std::move(video_frame));
+}
+
+std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position)
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+
+    if (video_frames_.empty())
+        return std::nullopt;
+
+    if (video_frames_.front().timestamp_ <= playback_position) {
+        VideoFrame first{video_frames_.front()};
+
+        video_frames_.erase(video_frames_.begin());
+
+        return first;
+    }
+
+    return std::nullopt;
 }
