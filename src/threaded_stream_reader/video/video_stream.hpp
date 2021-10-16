@@ -1,6 +1,8 @@
 #pragma once
 
 #include <array>
+#include <optional>
+#include <utility>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -11,6 +13,7 @@ extern "C" {
 
 #include "auto_delete_ressource.hpp"
 #include "types.hpp"
+#include "video_frame.hpp"
 
 class VideoStream {
     AVFormatContext* format_context_ = nullptr;
@@ -44,7 +47,5 @@ public:
     [[nodiscard]] bool is_ready() const { return is_ready_; }
     [[nodiscard]] int stream_index() const { return stream_index_; }
 
-    [[nodiscard]] int decode_packet(const AVPacket* packet, ImageSize video_size);
-
-    const uint8_t* next_frame();
+    [[nodiscard]] std::optional<VideoFrame> decode_packet(const AVPacket* packet, ImageSize video_size);
 };

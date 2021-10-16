@@ -70,13 +70,15 @@ int VideoStream::init_stream()
     return 0;
 }
 
-int VideoStream::decode_packet(const AVPacket* packet, ImageSize video_size)
+std::optional<VideoFrame> VideoStream::decode_packet(const AVPacket* packet, ImageSize video_size)
 {
     // send packet to the decoder
     int ret = avcodec_send_packet(codec_context_, packet);
 
-    if (ret < 0)
-        return show_error("avcodec_send_packet", ret);
+    if (ret < 0) {
+        show_error("avcodec_send_packet", ret);
+        return std::nullopt;
+    }
 
     // get all available frames from the decoder
     while (ret >= 0) {
@@ -84,9 +86,10 @@ int VideoStream::decode_packet(const AVPacket* packet, ImageSize video_size)
 
         if (ret < 0) {
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
-                return 0;
+                return std::nullopt;
 
-            return show_error("avcodec_receive_frame", ret);
+            show_error("avcodec_receive_frame", ret);
+            return std::nullopt;
         }
 
         // copy decoded frame to image buffer
@@ -99,23 +102,15 @@ int VideoStream::decode_packet(const AVPacket* packet, ImageSize video_size)
         if (scaling_context_)
             sws_scale(scaling_context_.get(), img_buf_data_.data(), img_buf_linesize_.data(), 0, codec_context_->height, dst_buf_data_.data(), dst_buf_linesize_.data());
 
+        const AVStream* stream = format_context_->streams[stream_index_];
+        VideoFrame video_frame{dst_buf_data_[0], 640, 480, frame_->pkt_dts, frame_->pts, frame_->best_effort_timestamp, av_q2d(stream->time_base)};
+
         av_frame_unref(frame_.get());
 
         has_frame_ = true;
 
-        if (ret < 0)
-            return ret;
+        return video_frame;
     }
 
-    return 0;
-}
-
-const uint8_t* VideoStream::next_frame()
-{
-    if (!has_frame_ || !is_ready_)
-        return nullptr;
-
-    has_frame_ = false;
-
-    return dst_buf_data_[0];
+    return std::nullopt;
 }

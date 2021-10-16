@@ -1,5 +1,8 @@
 #pragma once
 
+#include <thread>
+#include <vector>
+
 extern "C" {
 #include <libavcodec/packet.h>
 #include <libavformat/avformat.h>
@@ -7,11 +10,15 @@ extern "C" {
 
 #include "auto_delete_ressource.hpp"
 #include "types.hpp"
+#include "video_frame.hpp"
 
 class AudioStream;
 class VideoStream;
 
 class VideoContentProvider {
+    bool running_ = false;
+    std::thread thread_;
+
     AVFormatContext* format_context_ = nullptr;
 
     VideoStream& video_stream_;
@@ -21,12 +28,20 @@ class VideoContentProvider {
 
     bool is_ready_ = false;
 
+    std::vector<VideoFrame> video_frames_;
+
+    void main();
+
     int init();
+
+    void add_video_frame(VideoFrame&& video_frame);
 
 public:
     VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream);
+    ~VideoContentProvider();
+
+    void run();
+    void join();
 
     bool read(ImageSize video_size);
-
-    const uint8_t* next_video_frame();
 };
