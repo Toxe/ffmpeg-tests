@@ -1,5 +1,7 @@
 #include "video_content_provider.hpp"
 
+#include <algorithm>
+
 #include <spdlog/spdlog.h>
 
 #include "audio_stream.hpp"
@@ -90,13 +92,14 @@ void VideoContentProvider::add_video_frame(VideoFrame&& video_frame)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
+    video_frames_.push_back(std::move(video_frame));
+    std::sort(video_frames_.begin(), video_frames_.end(), [](const VideoFrame& left, const VideoFrame& right) { return left.timestamp_ < right.timestamp_; });
+
     spdlog::debug("VideoContentProvider: new video frame, {}x{}, dts={}, pts={}, best_effort_timestamp={} --> timestamp={:.4f} ({} frames available)",
         video_frame.width_, video_frame.height_,
         video_frame.dts_, video_frame.pts_, video_frame.best_effort_timestamp_,
         video_frame.timestamp_,
         video_frames_.size());
-
-    video_frames_.push_back(std::move(video_frame));
 }
 
 std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position)
