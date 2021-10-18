@@ -39,7 +39,8 @@ void VideoContentProvider::main()
     running_ = true;
 
     while (running_) {
-        read({640, 480});
+        if (!read({640, 480}))
+            running_ = false;
     }
 
     spdlog::debug("VideoContentProvider: stopping");
