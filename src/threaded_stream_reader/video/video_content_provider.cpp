@@ -95,11 +95,8 @@ void VideoContentProvider::add_video_frame(VideoFrame&& video_frame)
     video_frames_.push_back(std::move(video_frame));
     std::sort(video_frames_.begin(), video_frames_.end(), [](const VideoFrame& left, const VideoFrame& right) { return left.timestamp_ < right.timestamp_; });
 
-    spdlog::debug("VideoContentProvider: new video frame, {}x{}, dts={}, pts={}, best_effort_timestamp={} --> timestamp={:.4f} ({} frames available)",
-        video_frame.width_, video_frame.height_,
-        video_frame.dts_, video_frame.pts_, video_frame.best_effort_timestamp_,
-        video_frame.timestamp_,
-        video_frames_.size());
+    spdlog::debug("VideoContentProvider: new video frame, {}x{}, timestamp={:.4f} ({} frames available)",
+        video_frame.width_, video_frame.height_, video_frame.timestamp_, video_frames_.size());
 }
 
 std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position)
@@ -110,10 +107,8 @@ std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback
         return std::nullopt;
 
     if (video_frames_.front().timestamp_ <= playback_position) {
-        VideoFrame first{video_frames_.front()};
-
+        VideoFrame first{std::move(video_frames_.front())};
         video_frames_.erase(video_frames_.begin());
-
         return first;
     }
 

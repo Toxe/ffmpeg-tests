@@ -103,7 +103,7 @@ std::optional<VideoFrame> VideoStream::decode_packet(const AVPacket* packet, Ima
             sws_scale(scaling_context_.get(), img_buf_data_.data(), img_buf_linesize_.data(), 0, codec_context_->height, dst_buf_data_.data(), dst_buf_linesize_.data());
 
         const AVStream* stream = format_context_->streams[stream_index_];
-        VideoFrame video_frame{dst_buf_data_[0], 640, 480, frame_->pkt_dts, frame_->pts, frame_->best_effort_timestamp, av_q2d(stream->time_base)};
+        VideoFrame video_frame{dst_buf_data_[0], 640, 480, frame_->best_effort_timestamp, av_q2d(stream->time_base)};
 
         av_frame_unref(frame_.get());
 
