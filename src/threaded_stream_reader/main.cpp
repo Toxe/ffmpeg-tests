@@ -42,13 +42,15 @@ int main(int argc, char* argv[])
             playback_begin = std::chrono::steady_clock::now();
 
         const std::chrono::duration<double> playback_position = std::chrono::steady_clock::now() - playback_begin;
-        const auto frame = video_content_provider.next_frame(playback_position.count());
+
+        int frames_available = 0;
+        const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available);
 
         if (frame.has_value()) {
-            spdlog::debug("playback_position={:.4f}, found frame, timestamp={:.4f}", playback_position.count(), frame->timestamp_);
+            spdlog::debug("playback_position={:.4f}, found frame, timestamp={:.4f} ({} frames available)", playback_position.count(), frame->timestamp_, frames_available);
 
             if (!can_begin_playback)
-                spdlog::debug("received first frame, begin playback");
+                spdlog::info("received first frame, begin playback");
 
             can_begin_playback = true;
         } else {

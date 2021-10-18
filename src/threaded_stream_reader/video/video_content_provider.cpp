@@ -99,7 +99,7 @@ void VideoContentProvider::add_video_frame(VideoFrame&& video_frame)
         video_frame.width_, video_frame.height_, video_frame.timestamp_, video_frames_.size());
 }
 
-std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position)
+std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position, int& frames_available)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
@@ -109,6 +109,7 @@ std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback
     if (video_frames_.front().timestamp_ <= playback_position) {
         VideoFrame first{std::move(video_frames_.front())};
         video_frames_.erase(video_frames_.begin());
+        frames_available = static_cast<int>(video_frames_.size());
         return first;
     }
 
