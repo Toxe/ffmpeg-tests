@@ -43,6 +43,8 @@ void VideoContentProvider::main()
             running_ = false;
     }
 
+    is_ready_ = false;
+
     spdlog::debug("VideoContentProvider: stopping");
 }
 
@@ -100,12 +102,16 @@ void VideoContentProvider::add_video_frame(VideoFrame&& video_frame)
         video_frame.width_, video_frame.height_, video_frame.timestamp_, video_frames_.size());
 }
 
-std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position, int& frames_available)
+std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback_position, int& frames_available, bool& is_ready)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
-    if (video_frames_.empty())
+    is_ready = is_ready_;
+
+    if (video_frames_.empty()) {
+        frames_available = 0;
         return std::nullopt;
+    }
 
     if (video_frames_.front().timestamp_ <= playback_position) {
         VideoFrame first{std::move(video_frames_.front())};
@@ -114,5 +120,6 @@ std::optional<VideoFrame> VideoContentProvider::next_frame(const double playback
         return first;
     }
 
+    frames_available = static_cast<int>(video_frames_.size());
     return std::nullopt;
 }

@@ -44,17 +44,23 @@ int main(int argc, char* argv[])
         const std::chrono::duration<double> playback_position = std::chrono::steady_clock::now() - playback_begin;
 
         int frames_available = 0;
-        const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available);
+        bool is_ready = false;
+        const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available, is_ready);
 
         if (frame.has_value()) {
             spdlog::debug("playback_position={:.4f}, found frame, timestamp={:.4f} ({} frames available)", playback_position.count(), frame->timestamp_, frames_available);
 
-            if (!can_begin_playback)
+            if (!can_begin_playback) {
                 spdlog::info("received first frame, begin playback");
-
-            can_begin_playback = true;
+                can_begin_playback = true;
+            }
         } else {
-            spdlog::debug("playback_position={:.4f}, no frame available", playback_position.count());
+            // spdlog::debug("playback_position={:.4f}, no frame available", playback_position.count());
+
+            if (can_begin_playback && !is_ready && frames_available == 0)
+                break;
         }
     }
+
+    spdlog::info("playback stopped");
 }

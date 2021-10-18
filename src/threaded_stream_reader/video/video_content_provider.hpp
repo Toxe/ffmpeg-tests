@@ -49,5 +49,5 @@ public:
 
     bool read(ImageSize video_size);
 
-    [[nodiscard]] std::optional<VideoFrame> next_frame(const double playback_position, int& frames_available);
+    [[nodiscard]] std::optional<VideoFrame> next_frame(const double playback_position, int& frames_available, bool& is_ready);
 };
