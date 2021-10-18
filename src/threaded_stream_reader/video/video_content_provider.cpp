@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
 #include "audio_stream.hpp"
@@ -32,7 +33,7 @@ void VideoContentProvider::join()
 
 void VideoContentProvider::main()
 {
-    spdlog::debug("VideoContentProvider: starting");
+    spdlog::debug("VideoContentProvider: starting (thread id: {})", std::this_thread::get_id());
 
     is_ready_ = init() == 0;
 
@@ -45,7 +46,7 @@ void VideoContentProvider::main()
 
     is_ready_ = false;
 
-    spdlog::debug("VideoContentProvider: stopping");
+    spdlog::debug("VideoContentProvider: stopping (thread id: {})", std::this_thread::get_id());
 }
 
 int VideoContentProvider::init()
