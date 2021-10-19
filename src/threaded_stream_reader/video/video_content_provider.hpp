@@ -21,8 +21,8 @@ class VideoContentProvider {
     std::mutex mtx_scaler_;
     std::condition_variable_any cv_;
 
-    bool running_ = false;
-    std::thread thread_;
+    std::jthread main_thread_;
+    std::jthread scaler_thread_;
 
     AVFormatContext* format_context_ = nullptr;
     AVCodecContext* video_codec_context_ = nullptr;
@@ -42,7 +42,7 @@ class VideoContentProvider {
     std::queue<VideoFrame*> scale_video_frames_;
     std::vector<VideoFrame*> video_frames_;
 
-    void main();
+    void main(std::stop_token st);
     void scaler_main(std::stop_token st);
 
     int init();
@@ -60,7 +60,7 @@ public:
     ~VideoContentProvider();
 
     void run();
-    void join();
+    void stop();
 
     bool read(ImageSize video_size);
 

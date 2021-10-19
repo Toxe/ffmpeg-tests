@@ -3,6 +3,8 @@
 #include <string_view>
 #include <thread>
 
+#include <fmt/core.h>
+#include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
 #include "error/error.hpp"
@@ -15,7 +17,7 @@
         die("missing filename");
 
     if (!std::filesystem::exists(argv[1]))
-        die("file not found");
+        die(fmt::format("file not found: {}", argv[1]));
 
     return argv[1];
 }
@@ -26,12 +28,16 @@ int main(int argc, char* argv[])
 
     std::string_view filename = eval_args(argc, argv);
 
+    spdlog::debug("(thread {}, main) starting VideoContentProvider...", std::this_thread::get_id());
+
     VideoFile video_file(filename);
     VideoContentProvider video_content_provider(video_file.open_stream());
 
     // begin playback
     auto playback_begin = std::chrono::steady_clock::now();
     bool can_begin_playback = false;
+
+    spdlog::debug("(thread {}, main) main loop...", std::this_thread::get_id());
 
     while (true) {
         // do some work
@@ -48,10 +54,10 @@ int main(int argc, char* argv[])
         const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available, is_ready);
 
         if (frame) {
-            spdlog::debug("playback_position={:.4f}, found frame, timestamp={:.4f} ({} frames available)", playback_position.count(), frame->timestamp_, frames_available);
+            spdlog::trace("(thread {}, main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} frames available)", std::this_thread::get_id(), playback_position.count(), frame->timestamp_, frames_available);
 
             if (!can_begin_playback) {
-                spdlog::info("received first frame, begin playback");
+                spdlog::debug("(thread {}, main) received first frame, begin playback", std::this_thread::get_id());
                 can_begin_playback = true;
             }
 
@@ -62,5 +68,9 @@ int main(int argc, char* argv[])
         }
     }
 
-    spdlog::info("playback stopped");
+    spdlog::debug("(thread {}, main) playback stopped", std::this_thread::get_id());
+
+    video_content_provider.stop();
+
+    spdlog::debug("(thread {}, main) quit", std::this_thread::get_id());
 }

@@ -15,59 +15,60 @@ VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AVCo
 
 VideoContentProvider::~VideoContentProvider()
 {
-    join();
+    stop();
 }
 
 void VideoContentProvider::run()
 {
-    thread_ = std::thread(&VideoContentProvider::main, this);
+    spdlog::debug("(thread {}, VideoContentProvider) run", std::this_thread::get_id());
+
+    main_thread_ = std::jthread([&](std::stop_token st) { main(st); });
+    scaler_thread_ = std::jthread([&](std::stop_token st) { scaler_main(st); });
 }
 
-void VideoContentProvider::join()
+void VideoContentProvider::stop()
 {
-    if (thread_.joinable())
-        thread_.join();
+    main_thread_.request_stop();
+    scaler_thread_.request_stop();
+
+    if (main_thread_.joinable())
+        main_thread_.join();
+
+    if (scaler_thread_.joinable())
+        scaler_thread_.join();
 }
 
-void VideoContentProvider::main()
+void VideoContentProvider::main(std::stop_token st)
 {
-    spdlog::debug("VideoContentProvider: starting (thread id: {})", std::this_thread::get_id());
+    spdlog::debug("(thread {}, VideoContentProvider main) starting", std::this_thread::get_id());
 
     {
         std::lock_guard<std::mutex> lock(mtx_);
         is_ready_ = init() == 0;
     }
 
-    std::stop_source stop;
-    std::jthread scaler(&VideoContentProvider::scaler_main, this, stop.get_token());
-
-    running_ = true;
-
-    while (running_) {
+    while (!st.stop_requested())
         if (!read({640, 480}))
-            running_ = false;
-    }
-
-    stop.request_stop();
+            break;
 
     {
         std::lock_guard<std::mutex> lock(mtx_);
         is_ready_ = false;
     }
 
-    spdlog::debug("VideoContentProvider: stopping (thread id: {})", std::this_thread::get_id());
+    spdlog::debug("(thread {}, VideoContentProvider main) stopping", std::this_thread::get_id());
 }
 
 void VideoContentProvider::scaler_main(std::stop_token st)
 {
-    spdlog::debug("Scaler: starting (thread id: {})", std::this_thread::get_id());
+    spdlog::debug("(thread {}, VideoContentProvider scaler) starting", std::this_thread::get_id());
 
     while (!st.stop_requested()) {
         std::unique_lock<std::mutex> lock(mtx_scaler_);
         cv_.wait(lock, st, [&] { return !scale_video_frames_.empty(); });
 
         if (!st.stop_requested() && !scale_video_frames_.empty()) {
-            spdlog::trace("Scaler: scale frame");
+            spdlog::trace("(thread {}, VideoContentProvider scaler) scale frame", std::this_thread::get_id());
 
             VideoFrame* video_frame = scale_video_frames_.front();
             scale_video_frames_.pop();
@@ -78,7 +79,7 @@ void VideoContentProvider::scaler_main(std::stop_token st)
         }
     }
 
-    spdlog::debug("Scaler: stopping (thread id: {})", std::this_thread::get_id());
+    spdlog::debug("(thread {}, VideoContentProvider scaler) stopping", std::this_thread::get_id());
 }
 
 int VideoContentProvider::init()
@@ -151,8 +152,8 @@ void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
     video_frames_.push_back(video_frame);
     std::sort(video_frames_.begin(), video_frames_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
 
-    spdlog::debug("VideoContentProvider: new video frame, {}x{}, timestamp={:.4f} ({} frames available)",
-        video_frame->width_, video_frame->height_, video_frame->timestamp_, video_frames_.size());
+    spdlog::trace("(thread {}, VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames available)",
+        std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, video_frames_.size());
 }
 
 VideoFrame* VideoContentProvider::next_frame(const double playback_position, int& frames_available, bool& is_ready)
@@ -189,7 +190,8 @@ void VideoContentProvider::scale_frame(VideoFrame* video_frame, int width, int h
 
 int VideoContentProvider::resize_scaling_context(int width, int height)
 {
-    spdlog::debug("resize scaling context to {}x{}", width, height);
+    spdlog::trace("(thread {}, VideoContentProvider) resize scaling context to {}x{}",
+        std::this_thread::get_id(), width, height);
 
     scale_width_ = width;
     scale_height_ = height;
