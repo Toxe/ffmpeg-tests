@@ -5,12 +5,10 @@
 #include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
-#include "audio_stream.hpp"
 #include "error/error.hpp"
-#include "video_stream.hpp"
 
-VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index)
-    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, audio_stream_{audio_stream}, video_stream_index_{video_stream_index}, audio_stream_index_{audio_stream_index}
+VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index)
+    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, video_stream_index_{video_stream_index}, audio_stream_index_{audio_stream_index}
 {
     run();
 }
@@ -121,8 +119,9 @@ bool VideoContentProvider::read(ImageSize video_size)
             av_packet_unref(packet_.get());
 
             return true;
-        } else if (packet_->stream_index == audio_stream_.stream_index()) {
-            ret = audio_stream_.decode_packet(packet_.get());
+        } else if (packet_->stream_index == audio_stream_index_) {
+            // TODO: decode audio packet
+
             av_packet_unref(packet_.get());
         } else {
             av_packet_unref(packet_.get());

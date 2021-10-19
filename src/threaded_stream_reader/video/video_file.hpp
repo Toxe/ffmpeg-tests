@@ -10,7 +10,6 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-#include "audio_stream.hpp"
 #include "auto_delete_ressource.hpp"
 #include "video_content_provider.hpp"
 
@@ -21,8 +20,6 @@ class VideoFile {
 
     int audio_stream_index_ = -1;
     int video_stream_index_ = -1;
-
-    std::unique_ptr<AudioStream> audio_stream_;
 
     bool is_open_ = false;
 

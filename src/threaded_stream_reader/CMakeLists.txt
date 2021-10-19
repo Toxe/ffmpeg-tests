@@ -3,8 +3,6 @@ add_executable(threaded_stream_reader
     error/error.cpp
     error/error.hpp
     include/types.hpp
-    video/audio_stream.cpp
-    video/audio_stream.hpp
     video/auto_delete_ressource.hpp
     video/video_content_provider.cpp
     video/video_content_provider.hpp
