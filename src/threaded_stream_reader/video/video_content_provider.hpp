@@ -16,12 +16,15 @@ extern "C" {
 #include "types.hpp"
 #include "video_frame.hpp"
 
-class VideoContentProvider {
-    std::mutex mtx_;
-    std::mutex mtx_scaler_;
-    std::condition_variable_any cv_;
+constexpr int max_frame_queue_size = 60;
 
-    std::jthread main_thread_;
+class VideoContentProvider {
+    std::mutex mtx_reader_;
+    std::mutex mtx_scaler_;
+    std::condition_variable_any cv_reader_;
+    std::condition_variable_any cv_scaler_;
+
+    std::jthread reader_thread_;
     std::jthread scaler_thread_;
 
     AVFormatContext* format_context_ = nullptr;
@@ -42,7 +45,7 @@ class VideoContentProvider {
     std::queue<VideoFrame*> scale_video_frames_;
     std::vector<VideoFrame*> video_frames_;
 
-    void main(std::stop_token st);
+    void reader_main(std::stop_token st);
     void scaler_main(std::stop_token st);
 
     int init();

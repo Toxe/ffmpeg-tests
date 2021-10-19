@@ -51,10 +51,14 @@ int main(int argc, char* argv[])
 
         int frames_available = 0;
         bool is_ready = false;
+
+        const auto t1 = std::chrono::high_resolution_clock::now();
         const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available, is_ready);
+        const auto t2 = std::chrono::high_resolution_clock::now();
+        const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
         if (frame) {
-            spdlog::trace("(thread {}, main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} frames available)", std::this_thread::get_id(), playback_position.count(), frame->timestamp_, frames_available);
+            spdlog::trace("(thread {}, main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", std::this_thread::get_id(), playback_position.count(), frame->timestamp_, frames_available, ms.count());
 
             if (!can_begin_playback) {
                 spdlog::debug("(thread {}, main) received first frame, begin playback", std::this_thread::get_id());

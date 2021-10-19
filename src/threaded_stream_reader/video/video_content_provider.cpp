@@ -22,41 +22,57 @@ void VideoContentProvider::run()
 {
     spdlog::debug("(thread {}, VideoContentProvider) run", std::this_thread::get_id());
 
-    main_thread_ = std::jthread([&](std::stop_token st) { main(st); });
+    reader_thread_ = std::jthread([&](std::stop_token st) { reader_main(st); });
     scaler_thread_ = std::jthread([&](std::stop_token st) { scaler_main(st); });
 }
 
 void VideoContentProvider::stop()
 {
-    main_thread_.request_stop();
+    reader_thread_.request_stop();
     scaler_thread_.request_stop();
 
-    if (main_thread_.joinable())
-        main_thread_.join();
+    if (reader_thread_.joinable())
+        reader_thread_.join();
 
     if (scaler_thread_.joinable())
         scaler_thread_.join();
 }
 
-void VideoContentProvider::main(std::stop_token st)
+void VideoContentProvider::reader_main(std::stop_token st)
 {
-    spdlog::debug("(thread {}, VideoContentProvider main) starting", std::this_thread::get_id());
+    spdlog::debug("(thread {}, VideoContentProvider reader) starting", std::this_thread::get_id());
 
     {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<std::mutex> lock(mtx_reader_);
         is_ready_ = init() == 0;
     }
 
-    while (!st.stop_requested())
-        if (!read({640, 480}))
-            break;
+    while (!st.stop_requested()) {
+        bool frame_queue_is_full;
+
+        {
+            std::unique_lock<std::mutex> lock(mtx_reader_);
+            frame_queue_is_full = video_frames_.size() >= max_frame_queue_size;
+        }
+
+        if (!frame_queue_is_full)
+            if (!read({640, 480}))
+                break;
+
+        {
+            std::unique_lock<std::mutex> lock(mtx_reader_);
+
+            if (video_frames_.size() >= max_frame_queue_size)
+                cv_reader_.wait(lock, st, [&] { return video_frames_.size() < max_frame_queue_size; });
+        }
+    }
 
     {
-        std::lock_guard<std::mutex> lock(mtx_);
+        std::lock_guard<std::mutex> lock(mtx_reader_);
         is_ready_ = false;
     }
 
-    spdlog::debug("(thread {}, VideoContentProvider main) stopping", std::this_thread::get_id());
+    spdlog::debug("(thread {}, VideoContentProvider reader) stopping", std::this_thread::get_id());
 }
 
 void VideoContentProvider::scaler_main(std::stop_token st)
@@ -65,7 +81,7 @@ void VideoContentProvider::scaler_main(std::stop_token st)
 
     while (!st.stop_requested()) {
         std::unique_lock<std::mutex> lock(mtx_scaler_);
-        cv_.wait(lock, st, [&] { return !scale_video_frames_.empty(); });
+        cv_scaler_.wait(lock, st, [&] { return !scale_video_frames_.empty(); });
 
         if (!st.stop_requested() && !scale_video_frames_.empty()) {
             spdlog::trace("(thread {}, VideoContentProvider scaler) scale frame", std::this_thread::get_id());
@@ -142,23 +158,23 @@ void VideoContentProvider::add_unscaled_video_frame(VideoFrame* video_frame)
         scale_video_frames_.push(video_frame);
     }
 
-    cv_.notify_one();
+    cv_scaler_.notify_one();
 }
 
 void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::lock_guard<std::mutex> lock(mtx_reader_);
 
     video_frames_.push_back(video_frame);
     std::sort(video_frames_.begin(), video_frames_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
 
-    spdlog::trace("(thread {}, VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames available)",
+    spdlog::trace("(thread {}, VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
         std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, video_frames_.size());
 }
 
 VideoFrame* VideoContentProvider::next_frame(const double playback_position, int& frames_available, bool& is_ready)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
+    std::lock_guard<std::mutex> lock(mtx_reader_);
 
     is_ready = is_ready_;
 
@@ -171,6 +187,10 @@ VideoFrame* VideoContentProvider::next_frame(const double playback_position, int
         auto first_frame = video_frames_.front();
         video_frames_.erase(video_frames_.begin());
         frames_available = static_cast<int>(video_frames_.size());
+
+        if (frames_available < max_frame_queue_size)
+            cv_reader_.notify_one();
+
         return first_frame;
     }
 
