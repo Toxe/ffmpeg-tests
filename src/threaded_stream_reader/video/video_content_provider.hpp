@@ -17,7 +17,6 @@ extern "C" {
 #include "video_frame.hpp"
 
 class AudioStream;
-class VideoStream;
 
 class VideoContentProvider {
     std::mutex mtx_;
@@ -31,11 +30,13 @@ class VideoContentProvider {
     AVCodecContext* video_codec_context_ = nullptr;
     AVCodecContext* audio_codec_context_ = nullptr;
 
-    VideoStream& video_stream_;
     AudioStream& audio_stream_;
 
     auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
     auto_delete_ressource<AVPacket> packet_ = {nullptr, nullptr};
+
+    int video_stream_index_ = -1;
+    int audio_stream_index_ = -1;
 
     int scale_width_ = 0;
     int scale_height_ = 0;
@@ -48,17 +49,18 @@ class VideoContentProvider {
     void main();
     void scaler_main(std::stop_token st);
 
-    int resize_scaling_context(int width, int height);
-
     int init();
 
+    VideoFrame* decode_video_packet(const AVPacket* packet, ImageSize video_size);
+
+    int resize_scaling_context(int width, int height);
     void scale_frame(VideoFrame* video_frame, int width, int height);
 
     void add_unscaled_video_frame(VideoFrame* video_frame);
     void add_finished_video_frame(VideoFrame* video_frame);
 
 public:
-    VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context);
+    VideoContentProvider(AVFormatContext* format_context, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index);
     ~VideoContentProvider();
 
     void run();

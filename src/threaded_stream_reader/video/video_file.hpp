@@ -13,7 +13,6 @@ extern "C" {
 #include "audio_stream.hpp"
 #include "auto_delete_ressource.hpp"
 #include "video_content_provider.hpp"
-#include "video_stream.hpp"
 
 class VideoFile {
     auto_delete_ressource<AVFormatContext> format_context_ = {nullptr, nullptr};
@@ -24,7 +23,6 @@ class VideoFile {
     int video_stream_index_ = -1;
 
     std::unique_ptr<AudioStream> audio_stream_;
-    std::unique_ptr<VideoStream> video_stream_;
 
     bool is_open_ = false;
 

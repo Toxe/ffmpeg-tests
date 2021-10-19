@@ -12,8 +12,6 @@ add_executable(threaded_stream_reader
     video/video_file.hpp
     video/video_frame.cpp
     video/video_frame.hpp
-    video/video_stream.cpp
-    video/video_stream.hpp
 )
 
 set_target_properties(threaded_stream_reader PROPERTIES CXX_EXTENSIONS OFF)

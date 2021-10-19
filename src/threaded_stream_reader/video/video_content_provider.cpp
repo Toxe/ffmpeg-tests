@@ -9,8 +9,8 @@
 #include "error/error.hpp"
 #include "video_stream.hpp"
 
-VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context)
-    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, video_stream_{video_stream}, audio_stream_{audio_stream}
+VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index)
+    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, audio_stream_{audio_stream}, video_stream_index_{video_stream_index}, audio_stream_index_{audio_stream_index}
 {
     run();
 }
@@ -112,8 +112,8 @@ bool VideoContentProvider::read(ImageSize video_size)
             return false;
 
         // process only interesting packets, drop the rest
-        if (packet_->stream_index == video_stream_.stream_index()) {
-            auto video_frame = video_stream_.decode_packet(packet_.get(), video_size);
+        if (packet_->stream_index == video_stream_index_) {
+            auto video_frame = decode_video_packet(packet_.get(), video_size);
 
             if (video_frame)
                 add_unscaled_video_frame(video_frame);
@@ -201,4 +201,42 @@ int VideoContentProvider::resize_scaling_context(int width, int height)
         return show_error("sws_getContext");
 
     return 0;
+}
+
+VideoFrame* VideoContentProvider::decode_video_packet(const AVPacket* packet, ImageSize video_size)
+{
+    // send packet to the decoder
+    int ret = avcodec_send_packet(video_codec_context_, packet);
+
+    if (ret < 0) {
+        show_error("avcodec_send_packet", ret);
+        return nullptr;
+    }
+
+    // get all available frames from the decoder
+    while (ret >= 0) {
+        const AVStream* stream = format_context_->streams[video_stream_index_];
+        VideoFrame* video_frame = new VideoFrame{video_codec_context_};
+
+        ret = avcodec_receive_frame(video_codec_context_, video_frame->frame_);
+
+        if (ret < 0) {
+            delete video_frame;
+
+            if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
+                return nullptr;
+
+            show_error("avcodec_receive_frame", ret);
+            return nullptr;
+        }
+
+        // copy decoded frame to image buffer
+        av_image_copy(video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), const_cast<const uint8_t**>(video_frame->frame_->data), video_frame->frame_->linesize, video_codec_context_->pix_fmt, video_codec_context_->width, video_codec_context_->height);
+
+        video_frame->update(video_size.width, video_size.height, video_frame->frame_->best_effort_timestamp, av_q2d(stream->time_base));
+
+        return video_frame;
+    }
+
+    return nullptr;
 }
