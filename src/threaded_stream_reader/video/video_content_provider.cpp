@@ -9,8 +9,8 @@
 #include "error/error.hpp"
 #include "video_stream.hpp"
 
-VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream)
-    : format_context_{format_context}, video_stream_{video_stream}, audio_stream_{audio_stream}
+VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context)
+    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, video_stream_{video_stream}, audio_stream_{audio_stream}
 {
     run();
 }
@@ -41,7 +41,7 @@ void VideoContentProvider::main()
     }
 
     std::stop_source stop;
-    std::jthread scaler(&VideoContentProvider::scale_frames, this, stop.get_token());
+    std::jthread scaler(&VideoContentProvider::scaler_main, this, stop.get_token());
 
     running_ = true;
 
@@ -60,17 +60,7 @@ void VideoContentProvider::main()
     spdlog::debug("VideoContentProvider: stopping (thread id: {})", std::this_thread::get_id());
 }
 
-int VideoContentProvider::init()
-{
-    packet_ = auto_delete_ressource<AVPacket>(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
-
-    if (!packet_)
-        return show_error("av_packet_alloc");
-
-    return 0;
-}
-
-void VideoContentProvider::scale_frames(std::stop_token st)
+void VideoContentProvider::scaler_main(std::stop_token st)
 {
     spdlog::debug("Scaler: starting (thread id: {})", std::this_thread::get_id());
 
@@ -84,13 +74,32 @@ void VideoContentProvider::scale_frames(std::stop_token st)
             VideoFrame* video_frame = scale_video_frames_.front();
             scale_video_frames_.pop();
 
-            video_stream_.scale_frame(video_frame, 640, 480);
+            scale_frame(video_frame, 640, 480);
 
-            add_video_frame(video_frame);
+            add_finished_video_frame(video_frame);
         }
     }
 
     spdlog::debug("Scaler: stopping (thread id: {})", std::this_thread::get_id());
+}
+
+int VideoContentProvider::init()
+{
+    packet_ = auto_delete_ressource<AVPacket>(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
+
+    if (!packet_)
+        return show_error("av_packet_alloc");
+
+    // create scaling context
+    scale_width_ = video_codec_context_->width;
+    scale_height_ = video_codec_context_->height;
+
+    scaling_context_ = auto_delete_ressource<SwsContext>(sws_getContext(video_codec_context_->width, video_codec_context_->height, video_codec_context_->pix_fmt, scale_width_, scale_height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr), [](SwsContext* ctx) { sws_freeContext(ctx); });
+
+    if (!scaling_context_)
+        return show_error("sws_getContext");
+
+    return 0;
 }
 
 bool VideoContentProvider::read(ImageSize video_size)
@@ -107,7 +116,7 @@ bool VideoContentProvider::read(ImageSize video_size)
             auto video_frame = video_stream_.decode_packet(packet_.get(), video_size);
 
             if (video_frame)
-                scale_video_frame(video_frame);
+                add_unscaled_video_frame(video_frame);
 
             av_packet_unref(packet_.get());
 
@@ -126,7 +135,7 @@ bool VideoContentProvider::read(ImageSize video_size)
     return false;
 }
 
-void VideoContentProvider::scale_video_frame(VideoFrame* video_frame)
+void VideoContentProvider::add_unscaled_video_frame(VideoFrame* video_frame)
 {
     {
         std::lock_guard<std::mutex> lock(mtx_scaler_);
@@ -136,7 +145,7 @@ void VideoContentProvider::scale_video_frame(VideoFrame* video_frame)
     cv_.notify_one();
 }
 
-void VideoContentProvider::add_video_frame(VideoFrame* video_frame)
+void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
@@ -167,4 +176,29 @@ VideoFrame* VideoContentProvider::next_frame(const double playback_position, int
 
     frames_available = static_cast<int>(video_frames_.size());
     return nullptr;
+}
+
+void VideoContentProvider::scale_frame(VideoFrame* video_frame, int width, int height)
+{
+    // convert to destination format
+    if (scale_width_ != width || scale_height_ != height)
+        resize_scaling_context(width, height);
+
+    if (scaling_context_)
+        sws_scale(scaling_context_.get(), video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), 0, video_codec_context_->height, video_frame->dst_buf_data_.data(), video_frame->dst_buf_linesize_.data());
+}
+
+int VideoContentProvider::resize_scaling_context(int width, int height)
+{
+    spdlog::debug("resize scaling context to {}x{}", width, height);
+
+    scale_width_ = width;
+    scale_height_ = height;
+
+    scaling_context_.reset(sws_getContext(video_codec_context_->width, video_codec_context_->height, video_codec_context_->pix_fmt, scale_width_, scale_height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
+
+    if (!scaling_context_)
+        return show_error("sws_getContext");
+
+    return 0;
 }

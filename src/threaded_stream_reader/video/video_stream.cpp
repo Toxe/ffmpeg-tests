@@ -7,37 +7,7 @@
 VideoStream::VideoStream(AVFormatContext* format_context, AVCodecContext* codec_context, int stream_index)
     : format_context_{format_context}, codec_context_{codec_context}, stream_index_{stream_index}
 {
-    is_ready_ = init_stream() == 0;
     has_frame_ = false;
-}
-
-int VideoStream::resize_scaling_context(AVCodecContext* codec_context, int width, int height)
-{
-    spdlog::debug("resize scaling context to {}x{}", width, height);
-
-    scale_width_ = width;
-    scale_height_ = height;
-
-    scaling_context_.reset(sws_getContext(codec_context->width, codec_context->height, codec_context->pix_fmt, scale_width_, scale_height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
-
-    if (!scaling_context_)
-        return show_error("sws_getContext");
-
-    return 0;
-}
-
-int VideoStream::init_stream()
-{
-    // create scaling context
-    scale_width_ = codec_context_->width;
-    scale_height_ = codec_context_->height;
-
-    scaling_context_ = auto_delete_ressource<SwsContext>(sws_getContext(codec_context_->width, codec_context_->height, codec_context_->pix_fmt, scale_width_, scale_height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr), [](SwsContext* ctx) { sws_freeContext(ctx); });
-
-    if (!scaling_context_)
-        return show_error("sws_getContext");
-
-    return 0;
 }
 
 VideoFrame* VideoStream::decode_packet(const AVPacket* packet, ImageSize video_size)
@@ -78,14 +48,4 @@ VideoFrame* VideoStream::decode_packet(const AVPacket* packet, ImageSize video_s
     }
 
     return nullptr;
-}
-
-void VideoStream::scale_frame(VideoFrame* video_frame, int width, int height)
-{
-    // convert to destination format
-    if (scale_width_ != width || scale_height_ != height)
-        resize_scaling_context(codec_context_, width, height);
-
-    if (scaling_context_)
-        sws_scale(scaling_context_.get(), video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), 0, codec_context_->height, video_frame->dst_buf_data_.data(), video_frame->dst_buf_linesize_.data());
 }

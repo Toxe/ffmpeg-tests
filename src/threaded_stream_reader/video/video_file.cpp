@@ -105,5 +105,5 @@ VideoContentProvider VideoFile::open_stream()
     audio_stream_ = std::make_unique<AudioStream>(format_context_.get(), audio_codec_context_.get(), audio_stream_index_);
     video_stream_ = std::make_unique<VideoStream>(format_context_.get(), video_codec_context_.get(), video_stream_index_);
 
-    return VideoContentProvider(format_context_.get(), *video_stream_, *audio_stream_);
+    return VideoContentProvider(format_context_.get(), *video_stream_, *audio_stream_, video_codec_context_.get(), audio_codec_context_.get());
 }

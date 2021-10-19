@@ -28,11 +28,17 @@ class VideoContentProvider {
     std::thread thread_;
 
     AVFormatContext* format_context_ = nullptr;
+    AVCodecContext* video_codec_context_ = nullptr;
+    AVCodecContext* audio_codec_context_ = nullptr;
 
     VideoStream& video_stream_;
     AudioStream& audio_stream_;
 
+    auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
     auto_delete_ressource<AVPacket> packet_ = {nullptr, nullptr};
+
+    int scale_width_ = 0;
+    int scale_height_ = 0;
 
     bool is_ready_ = false;
 
@@ -40,15 +46,19 @@ class VideoContentProvider {
     std::vector<VideoFrame*> video_frames_;
 
     void main();
-    void scale_frames(std::stop_token st);
+    void scaler_main(std::stop_token st);
+
+    int resize_scaling_context(int width, int height);
 
     int init();
 
-    void scale_video_frame(VideoFrame* video_frame);
-    void add_video_frame(VideoFrame* video_frame);
+    void scale_frame(VideoFrame* video_frame, int width, int height);
+
+    void add_unscaled_video_frame(VideoFrame* video_frame);
+    void add_finished_video_frame(VideoFrame* video_frame);
 
 public:
-    VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream);
+    VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context);
     ~VideoContentProvider();
 
     void run();
