@@ -47,16 +47,16 @@ int main(int argc, char* argv[])
         bool is_ready = false;
         const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available, is_ready);
 
-        if (frame.has_value()) {
+        if (frame) {
             spdlog::debug("playback_position={:.4f}, found frame, timestamp={:.4f} ({} frames available)", playback_position.count(), frame->timestamp_, frames_available);
 
             if (!can_begin_playback) {
                 spdlog::info("received first frame, begin playback");
                 can_begin_playback = true;
             }
-        } else {
-            // spdlog::debug("playback_position={:.4f}, no frame available", playback_position.count());
 
+            delete frame;
+        } else {
             if (can_begin_playback && !is_ready && frames_available == 0)
                 break;
         }

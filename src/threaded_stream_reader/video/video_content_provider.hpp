@@ -1,7 +1,9 @@
 #pragma once
 
+#include <condition_variable>
 #include <mutex>
-#include <optional>
+#include <queue>
+#include <stop_token>
 #include <thread>
 #include <vector>
 
@@ -19,6 +21,8 @@ class VideoStream;
 
 class VideoContentProvider {
     std::mutex mtx_;
+    std::mutex mtx_scaler_;
+    std::condition_variable_any cv_;
 
     bool running_ = false;
     std::thread thread_;
@@ -32,13 +36,16 @@ class VideoContentProvider {
 
     bool is_ready_ = false;
 
-    std::vector<VideoFrame> video_frames_;
+    std::queue<VideoFrame*> scale_video_frames_;
+    std::vector<VideoFrame*> video_frames_;
 
     void main();
+    void scale_frames(std::stop_token st);
 
     int init();
 
-    void add_video_frame(VideoFrame&& video_frame);
+    void scale_video_frame(VideoFrame* video_frame);
+    void add_video_frame(VideoFrame* video_frame);
 
 public:
     VideoContentProvider(AVFormatContext* format_context, VideoStream& video_stream, AudioStream& audio_stream);
@@ -49,5 +56,5 @@ public:
 
     bool read(ImageSize video_size);
 
-    [[nodiscard]] std::optional<VideoFrame> next_frame(const double playback_position, int& frames_available, bool& is_ready);
+    [[nodiscard]] VideoFrame* next_frame(const double playback_position, int& frames_available, bool& is_ready);
 };

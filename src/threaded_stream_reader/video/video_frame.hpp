@@ -1,23 +1,36 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <utility>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+}
+
 struct VideoFrame {
-    int width_;
-    int height_;
-    double timestamp_;
+    AVFrame* frame_ = nullptr;
 
-    uint8_t* rgba_;
+    std::array<uint8_t*, 4> img_buf_data_ = {nullptr};
+    std::array<uint8_t*, 4> dst_buf_data_ = {nullptr};
+    std::array<int, 4> img_buf_linesize_ = {0};
+    std::array<int, 4> dst_buf_linesize_ = {0};
 
-    VideoFrame(const uint8_t* data, int width, int height, int64_t best_effort_timestamp, double time_base);
+    int width_ = 0;
+    int height_ = 0;
+    double timestamp_ = 0.0;
+
+    VideoFrame(AVCodecContext* codec_context);
     ~VideoFrame();
 
     VideoFrame(const VideoFrame& other) = delete; // copy constructor
     VideoFrame& operator=(const VideoFrame& other) = delete; // copy assignment
 
     VideoFrame(VideoFrame&& other) // move constructor
-        : rgba_{std::exchange(other.rgba_, nullptr)}
+        : frame_{std::exchange(other.frame_, nullptr)}
     {
         width_ = other.width_;
         height_ = other.height_;
@@ -26,7 +39,7 @@ struct VideoFrame {
 
     VideoFrame& operator=(VideoFrame&& other) // move assignment
     {
-        std::swap(rgba_, other.rgba_);
+        std::swap(frame_, other.frame_);
 
         width_ = other.width_;
         height_ = other.height_;
@@ -34,4 +47,6 @@ struct VideoFrame {
 
         return *this;
     }
+
+    void update(int width, int height, int64_t best_effort_timestamp, double time_base);
 };
