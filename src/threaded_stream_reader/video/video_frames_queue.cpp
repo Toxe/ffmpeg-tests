@@ -14,6 +14,9 @@ VideoFrame* VideoFramesQueue::pop(double playback_position)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
+    if (queue_.empty())
+        return nullptr;
+
     if (queue_.front()->timestamp_ <= playback_position) {
         auto frame = queue_.front();
         queue_.erase(queue_.begin());
