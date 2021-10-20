@@ -1,7 +1,5 @@
 #include "video_content_provider.hpp"
 
-#include <algorithm>
-
 #include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
@@ -50,7 +48,7 @@ void VideoContentProvider::reader_main(std::stop_token st)
     while (!st.stop_requested()) {
         {
             std::unique_lock<std::mutex> lock(mtx_reader_);
-            cv_reader_.wait(lock, st, [&] { return finished_video_frames_queue_.size() < max_frame_queue_size; });
+            cv_reader_.wait(lock, st, [&] { return !finished_video_frames_queue_.full(); });
         }
 
         if (!st.stop_requested()) {
@@ -156,10 +154,7 @@ void VideoContentProvider::add_unscaled_video_frame(VideoFrame* video_frame)
 
 void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 {
-    std::lock_guard<std::mutex> lock(mtx_reader_);
-
-    finished_video_frames_queue_.push_back(video_frame);
-    std::sort(finished_video_frames_queue_.begin(), finished_video_frames_queue_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
+    finished_video_frames_queue_.push(video_frame);
 
     spdlog::trace("(thread {}, VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
         std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, finished_video_frames_queue_.size());
@@ -167,21 +162,22 @@ void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 
 VideoFrame* VideoContentProvider::next_frame(const double playback_position, int& frames_available, bool& is_ready)
 {
-    std::lock_guard<std::mutex> lock(mtx_reader_);
-
-    is_ready = is_ready_;
+    {
+        std::lock_guard<std::mutex> lock(mtx_reader_);
+        is_ready = is_ready_;
+    }
 
     if (finished_video_frames_queue_.empty()) {
         frames_available = 0;
         return nullptr;
     }
 
-    if (finished_video_frames_queue_.front()->timestamp_ <= playback_position) {
-        auto first_frame = finished_video_frames_queue_.front();
-        finished_video_frames_queue_.erase(finished_video_frames_queue_.begin());
+    auto first_frame = finished_video_frames_queue_.pop(playback_position);
+
+    if (first_frame) {
         frames_available = static_cast<int>(finished_video_frames_queue_.size());
 
-        if (frames_available < max_frame_queue_size)
+        if (!finished_video_frames_queue_.full())
             cv_reader_.notify_one();
 
         return first_frame;
@@ -203,8 +199,7 @@ void VideoContentProvider::scale_frame(VideoFrame* video_frame, int width, int h
 
 int VideoContentProvider::resize_scaling_context(int width, int height)
 {
-    spdlog::trace("(thread {}, VideoContentProvider) resize scaling context to {}x{}",
-        std::this_thread::get_id(), width, height);
+    spdlog::trace("(thread {}, VideoContentProvider) resize scaling context to {}x{}", std::this_thread::get_id(), width, height);
 
     scale_width_ = width;
     scale_height_ = height;

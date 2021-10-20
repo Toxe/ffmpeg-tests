@@ -6,7 +6,6 @@
 #include <queue>
 #include <stop_token>
 #include <thread>
-#include <vector>
 
 extern "C" {
 #include <libavcodec/packet.h>
@@ -16,8 +15,7 @@ extern "C" {
 #include "auto_delete_ressource.hpp"
 #include "types.hpp"
 #include "video_frame.hpp"
-
-constexpr int max_frame_queue_size = 60;
+#include "video_frames_queue.hpp"
 
 class VideoContentProvider {
     std::mutex mtx_reader_;
@@ -44,7 +42,7 @@ class VideoContentProvider {
     bool is_ready_ = false;
 
     std::queue<VideoFrame*> video_frames_to_scale_queue_;
-    std::vector<VideoFrame*> finished_video_frames_queue_;
+    VideoFramesQueue finished_video_frames_queue_;
 
     void reader_main(std::stop_token st);
     void scaler_main(std::stop_token st);
