@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <mutex>
+#include <optional>
 #include <queue>
 #include <stop_token>
 #include <thread>
@@ -48,9 +49,10 @@ class VideoContentProvider {
     void reader_main(std::stop_token st);
     void scaler_main(std::stop_token st);
 
-    int init();
+    [[nodiscard]] int init();
 
-    VideoFrame* decode_video_packet(const AVPacket* packet, ImageSize video_size);
+    [[nodiscard]] std::optional<VideoFrame*> read(ImageSize video_size);
+    [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet, ImageSize video_size);
 
     int resize_scaling_context(int width, int height);
     void scale_frame(VideoFrame* video_frame, int width, int height);
@@ -64,8 +66,6 @@ public:
 
     void run();
     void stop();
-
-    bool read(ImageSize video_size);
 
     [[nodiscard]] VideoFrame* next_frame(const double playback_position, int& frames_available, bool& is_ready);
 };

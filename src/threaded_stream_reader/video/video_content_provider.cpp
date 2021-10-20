@@ -48,22 +48,20 @@ void VideoContentProvider::reader_main(std::stop_token st)
     }
 
     while (!st.stop_requested()) {
-        bool frame_queue_is_full;
-
         {
             std::unique_lock<std::mutex> lock(mtx_reader_);
-            frame_queue_is_full = video_frames_.size() >= max_frame_queue_size;
+            cv_reader_.wait(lock, st, [&] { return video_frames_.size() < max_frame_queue_size; });
         }
 
-        if (!frame_queue_is_full)
-            if (!read({640, 480}))
+        if (!st.stop_requested()) {
+            auto video_frame = read({640, 480});
+
+            if (!video_frame.has_value())
                 break;
 
-        {
-            std::unique_lock<std::mutex> lock(mtx_reader_);
-
-            if (video_frames_.size() >= max_frame_queue_size)
-                cv_reader_.wait(lock, st, [&] { return video_frames_.size() < max_frame_queue_size; });
+            if (video_frame.value()) {
+                add_unscaled_video_frame(video_frame.value());
+            }
         }
     }
 
@@ -117,25 +115,20 @@ int VideoContentProvider::init()
     return 0;
 }
 
-bool VideoContentProvider::read(ImageSize video_size)
+std::optional<VideoFrame*> VideoContentProvider::read(ImageSize video_size)
 {
     // read until we get at least one video frame
     while (true) {
         int ret = av_read_frame(format_context_, packet_.get());
 
         if (ret < 0)
-            return false;
+            return std::nullopt;
 
         // process only interesting packets, drop the rest
         if (packet_->stream_index == video_stream_index_) {
-            auto video_frame = decode_video_packet(packet_.get(), video_size);
-
-            if (video_frame)
-                add_unscaled_video_frame(video_frame);
-
+            VideoFrame* video_frame = decode_video_packet(packet_.get(), video_size);
             av_packet_unref(packet_.get());
-
-            return true;
+            return video_frame;
         } else if (packet_->stream_index == audio_stream_index_) {
             // TODO: decode audio packet
 
@@ -148,7 +141,7 @@ bool VideoContentProvider::read(ImageSize video_size)
             break;
     }
 
-    return false;
+    return std::nullopt;
 }
 
 void VideoContentProvider::add_unscaled_video_frame(VideoFrame* video_frame)
