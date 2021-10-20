@@ -50,7 +50,7 @@ void VideoContentProvider::reader_main(std::stop_token st)
     while (!st.stop_requested()) {
         {
             std::unique_lock<std::mutex> lock(mtx_reader_);
-            cv_reader_.wait(lock, st, [&] { return video_frames_.size() < max_frame_queue_size; });
+            cv_reader_.wait(lock, st, [&] { return finished_video_frames_queue_.size() < max_frame_queue_size; });
         }
 
         if (!st.stop_requested()) {
@@ -79,13 +79,13 @@ void VideoContentProvider::scaler_main(std::stop_token st)
 
     while (!st.stop_requested()) {
         std::unique_lock<std::mutex> lock(mtx_scaler_);
-        cv_scaler_.wait(lock, st, [&] { return !scale_video_frames_.empty(); });
+        cv_scaler_.wait(lock, st, [&] { return !video_frames_to_scale_queue_.empty(); });
 
-        if (!st.stop_requested() && !scale_video_frames_.empty()) {
+        if (!st.stop_requested() && !video_frames_to_scale_queue_.empty()) {
             spdlog::trace("(thread {}, VideoContentProvider scaler) scale frame", std::this_thread::get_id());
 
-            VideoFrame* video_frame = scale_video_frames_.front();
-            scale_video_frames_.pop();
+            VideoFrame* video_frame = video_frames_to_scale_queue_.front();
+            video_frames_to_scale_queue_.pop();
 
             scale_frame(video_frame, 640, 480);
 
@@ -148,7 +148,7 @@ void VideoContentProvider::add_unscaled_video_frame(VideoFrame* video_frame)
 {
     {
         std::lock_guard<std::mutex> lock(mtx_scaler_);
-        scale_video_frames_.push(video_frame);
+        video_frames_to_scale_queue_.push(video_frame);
     }
 
     cv_scaler_.notify_one();
@@ -158,11 +158,11 @@ void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 {
     std::lock_guard<std::mutex> lock(mtx_reader_);
 
-    video_frames_.push_back(video_frame);
-    std::sort(video_frames_.begin(), video_frames_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
+    finished_video_frames_queue_.push_back(video_frame);
+    std::sort(finished_video_frames_queue_.begin(), finished_video_frames_queue_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
 
     spdlog::trace("(thread {}, VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
-        std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, video_frames_.size());
+        std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, finished_video_frames_queue_.size());
 }
 
 VideoFrame* VideoContentProvider::next_frame(const double playback_position, int& frames_available, bool& is_ready)
@@ -171,15 +171,15 @@ VideoFrame* VideoContentProvider::next_frame(const double playback_position, int
 
     is_ready = is_ready_;
 
-    if (video_frames_.empty()) {
+    if (finished_video_frames_queue_.empty()) {
         frames_available = 0;
         return nullptr;
     }
 
-    if (video_frames_.front()->timestamp_ <= playback_position) {
-        auto first_frame = video_frames_.front();
-        video_frames_.erase(video_frames_.begin());
-        frames_available = static_cast<int>(video_frames_.size());
+    if (finished_video_frames_queue_.front()->timestamp_ <= playback_position) {
+        auto first_frame = finished_video_frames_queue_.front();
+        finished_video_frames_queue_.erase(finished_video_frames_queue_.begin());
+        frames_available = static_cast<int>(finished_video_frames_queue_.size());
 
         if (frames_available < max_frame_queue_size)
             cv_reader_.notify_one();
@@ -187,7 +187,7 @@ VideoFrame* VideoContentProvider::next_frame(const double playback_position, int
         return first_frame;
     }
 
-    frames_available = static_cast<int>(video_frames_.size());
+    frames_available = static_cast<int>(finished_video_frames_queue_.size());
     return nullptr;
 }
 

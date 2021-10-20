@@ -43,8 +43,8 @@ class VideoContentProvider {
 
     bool is_ready_ = false;
 
-    std::queue<VideoFrame*> scale_video_frames_;
-    std::vector<VideoFrame*> video_frames_;
+    std::queue<VideoFrame*> video_frames_to_scale_queue_;
+    std::vector<VideoFrame*> finished_video_frames_queue_;
 
     void reader_main(std::stop_token st);
     void scaler_main(std::stop_token st);
