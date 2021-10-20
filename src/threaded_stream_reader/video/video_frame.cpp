@@ -2,10 +2,11 @@
 
 #include "error/error.hpp"
 
-#include <spdlog/spdlog.h>
-
-VideoFrame::VideoFrame(AVCodecContext* codec_context)
+VideoFrame::VideoFrame(AVCodecContext* codec_context, int width, int height)
 {
+    width_ = width;
+    height_ = height;
+
     // allocate buffer for decoded source images
     int buf_size = av_image_alloc(img_buf_data_.data(), img_buf_linesize_.data(), codec_context->width, codec_context->height, codec_context->pix_fmt, 1);
 
@@ -13,7 +14,7 @@ VideoFrame::VideoFrame(AVCodecContext* codec_context)
         show_error("av_image_alloc", buf_size);
 
     // allocate buffer for scaled output images
-    buf_size = av_image_alloc(dst_buf_data_.data(), dst_buf_linesize_.data(), codec_context->width, codec_context->height, AV_PIX_FMT_RGBA, 1);
+    buf_size = av_image_alloc(dst_buf_data_.data(), dst_buf_linesize_.data(), width_, height_, AV_PIX_FMT_RGBA, 1);
 
     if (buf_size < 0)
         show_error("av_image_alloc", buf_size);
@@ -35,9 +36,7 @@ VideoFrame::~VideoFrame()
     av_freep(img_buf_data_.data());
 }
 
-void VideoFrame::update(int width, int height, int64_t best_effort_timestamp, double time_base)
+void VideoFrame::update(int64_t best_effort_timestamp, double time_base)
 {
-    width_ = width;
-    height_ = height;
     timestamp_ = static_cast<double>(best_effort_timestamp) * time_base;
 }

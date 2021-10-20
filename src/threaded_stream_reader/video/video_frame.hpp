@@ -23,7 +23,7 @@ struct VideoFrame {
     int height_ = 0;
     double timestamp_ = 0.0;
 
-    VideoFrame(AVCodecContext* codec_context);
+    VideoFrame(AVCodecContext* codec_context, int width, int height);
     ~VideoFrame();
 
     VideoFrame(const VideoFrame& other) = delete; // copy constructor
@@ -48,5 +48,5 @@ struct VideoFrame {
         return *this;
     }
 
-    void update(int width, int height, int64_t best_effort_timestamp, double time_base);
+    void update(int64_t best_effort_timestamp, double time_base);
 };

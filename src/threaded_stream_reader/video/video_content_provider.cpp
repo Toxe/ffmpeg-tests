@@ -237,7 +237,7 @@ VideoFrame* VideoContentProvider::decode_video_packet(const AVPacket* packet, Im
     // get all available frames from the decoder
     while (ret >= 0) {
         const AVStream* stream = format_context_->streams[video_stream_index_];
-        VideoFrame* video_frame = new VideoFrame{video_codec_context_};
+        VideoFrame* video_frame = new VideoFrame{video_codec_context_, video_size.width, video_size.height};
 
         ret = avcodec_receive_frame(video_codec_context_, video_frame->frame_);
 
@@ -254,7 +254,7 @@ VideoFrame* VideoContentProvider::decode_video_packet(const AVPacket* packet, Im
         // copy decoded frame to image buffer
         av_image_copy(video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), const_cast<const uint8_t**>(video_frame->frame_->data), video_frame->frame_->linesize, video_codec_context_->pix_fmt, video_codec_context_->width, video_codec_context_->height);
 
-        video_frame->update(video_size.width, video_size.height, video_frame->frame_->best_effort_timestamp, av_q2d(stream->time_base));
+        video_frame->update(video_frame->frame_->best_effort_timestamp, av_q2d(stream->time_base));
 
         return video_frame;
     }
