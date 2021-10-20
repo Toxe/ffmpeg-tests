@@ -49,11 +49,8 @@ int main(int argc, char* argv[])
 
         const std::chrono::duration<double> playback_position = std::chrono::steady_clock::now() - playback_begin;
 
-        int frames_available = 0;
-        bool is_ready = false;
-
         const auto t1 = std::chrono::high_resolution_clock::now();
-        const auto frame = video_content_provider.next_frame(playback_position.count(), frames_available, is_ready);
+        auto [frame, frames_available, is_ready] = video_content_provider.next_frame(playback_position.count());
         const auto t2 = std::chrono::high_resolution_clock::now();
         const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 

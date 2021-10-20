@@ -160,31 +160,16 @@ void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
         std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, finished_video_frames_queue_.size());
 }
 
-VideoFrame* VideoContentProvider::next_frame(const double playback_position, int& frames_available, bool& is_ready)
+std::tuple<VideoFrame*, int, bool> VideoContentProvider::next_frame(const double playback_position)
 {
-    {
-        std::lock_guard<std::mutex> lock(mtx_reader_);
-        is_ready = is_ready_;
-    }
+    std::lock_guard<std::mutex> lock(mtx_reader_);
 
-    if (finished_video_frames_queue_.empty()) {
-        frames_available = 0;
-        return nullptr;
-    }
+    VideoFrame* first_frame = finished_video_frames_queue_.pop(playback_position);
 
-    auto first_frame = finished_video_frames_queue_.pop(playback_position);
+    if (first_frame && !finished_video_frames_queue_.full())
+        cv_reader_.notify_one();
 
-    if (first_frame) {
-        frames_available = static_cast<int>(finished_video_frames_queue_.size());
-
-        if (!finished_video_frames_queue_.full())
-            cv_reader_.notify_one();
-
-        return first_frame;
-    }
-
-    frames_available = static_cast<int>(finished_video_frames_queue_.size());
-    return nullptr;
+    return std::make_tuple(first_frame, static_cast<int>(finished_video_frames_queue_.size()), is_ready_);
 }
 
 void VideoContentProvider::scale_frame(VideoFrame* video_frame, int width, int height)

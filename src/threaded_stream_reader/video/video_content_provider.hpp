@@ -6,6 +6,7 @@
 #include <queue>
 #include <stop_token>
 #include <thread>
+#include <tuple>
 
 extern "C" {
 #include <libavcodec/packet.h>
@@ -65,5 +66,5 @@ public:
     void run();
     void stop();
 
-    [[nodiscard]] VideoFrame* next_frame(const double playback_position, int& frames_available, bool& is_ready);
+    [[nodiscard]] std::tuple<VideoFrame*, int, bool> next_frame(const double playback_position);
 };
