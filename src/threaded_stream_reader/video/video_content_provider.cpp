@@ -11,8 +11,6 @@ VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AVCo
 {
     scale_width_ = scale_width;
     scale_height_ = scale_height;
-
-    run();
 }
 
 VideoContentProvider::~VideoContentProvider()

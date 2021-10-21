@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 
     VideoFile video_file(filename);
     VideoContentProvider video_content_provider(video_file.open_stream(640, 480));
+    video_content_provider.run();
 
     // begin playback
     auto playback_begin = std::chrono::steady_clock::now();
