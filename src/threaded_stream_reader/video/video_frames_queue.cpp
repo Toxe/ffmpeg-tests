@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include "video_frame.hpp"
+
 void VideoFramesQueue::push(VideoFrame* frame)
 {
     std::lock_guard<std::mutex> lock(mtx_);

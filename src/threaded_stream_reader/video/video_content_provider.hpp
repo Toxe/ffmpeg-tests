@@ -15,8 +15,9 @@ extern "C" {
 
 #include "auto_delete_ressource.hpp"
 #include "types.hpp"
-#include "video_frame.hpp"
 #include "video_frames_queue.hpp"
+
+struct VideoFrame;
 
 class VideoContentProvider {
     std::mutex mtx_reader_;

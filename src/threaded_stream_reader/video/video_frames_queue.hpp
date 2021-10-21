@@ -3,7 +3,7 @@
 #include <mutex>
 #include <vector>
 
-#include "video_frame.hpp"
+struct VideoFrame;
 
 class VideoFramesQueue {
     const std::size_t max_queue_size_ = 60;
