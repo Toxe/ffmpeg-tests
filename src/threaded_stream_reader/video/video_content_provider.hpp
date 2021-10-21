@@ -48,19 +48,19 @@ class VideoContentProvider {
     void reader_main(std::stop_token st);
     void scaler_main(std::stop_token st);
 
-    [[nodiscard]] int init();
+    [[nodiscard]] int init(const int scale_width, const int scale_height);
 
-    [[nodiscard]] std::optional<VideoFrame*> read(ImageSize video_size);
-    [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet, ImageSize video_size);
+    [[nodiscard]] std::optional<VideoFrame*> read();
+    [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet, const int scale_width, const int scale_height);
 
     int resize_scaling_context(int width, int height);
-    void scale_frame(VideoFrame* video_frame, int width, int height);
+    void scale_frame(VideoFrame* video_frame);
 
     void add_unscaled_video_frame(VideoFrame* video_frame);
     void add_finished_video_frame(VideoFrame* video_frame);
 
 public:
-    VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index);
+    VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height);
     ~VideoContentProvider();
 
     void run();
