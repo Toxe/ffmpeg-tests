@@ -13,7 +13,6 @@ extern "C" {
 }
 
 #include "auto_delete_ressource.hpp"
-#include "types.hpp"
 #include "video_frame_scaler.hpp"
 #include "video_frames_queue.hpp"
 
