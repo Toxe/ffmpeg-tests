@@ -3,7 +3,6 @@
 #include <condition_variable>
 #include <mutex>
 #include <optional>
-#include <queue>
 #include <stop_token>
 #include <thread>
 #include <tuple>
@@ -15,6 +14,7 @@ extern "C" {
 
 #include "auto_delete_ressource.hpp"
 #include "types.hpp"
+#include "video_frame_scaler.hpp"
 #include "video_frames_queue.hpp"
 
 struct VideoFrame;
@@ -32,7 +32,6 @@ class VideoContentProvider {
     AVCodecContext* video_codec_context_ = nullptr;
     AVCodecContext* audio_codec_context_ = nullptr;
 
-    auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
     auto_delete_ressource<AVPacket> packet_ = {nullptr, nullptr};
 
     int video_stream_index_ = -1;
@@ -43,19 +42,14 @@ class VideoContentProvider {
 
     bool is_ready_ = false;
 
-    std::queue<VideoFrame*> video_frames_to_scale_queue_;
     VideoFramesQueue finished_video_frames_queue_;
+    VideoFrameScaler video_frame_scaler_;
 
     void reader_main(std::stop_token st);
     void scaler_main(std::stop_token st);
 
-    [[nodiscard]] int init(const int scale_width, const int scale_height);
-
     [[nodiscard]] std::optional<VideoFrame*> read();
     [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet, const int scale_width, const int scale_height);
-
-    int resize_scaling_context(int width, int height);
-    void scale_frame(VideoFrame* video_frame);
 
     void add_unscaled_video_frame(VideoFrame* video_frame);
     void add_finished_video_frame(VideoFrame* video_frame);

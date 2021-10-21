@@ -1,5 +1,7 @@
 #include "video_content_provider.hpp"
 
+#include <stdexcept>
+
 #include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
@@ -7,10 +9,15 @@
 #include "video_frame.hpp"
 
 VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height)
-    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, video_stream_index_{video_stream_index}, audio_stream_index_{audio_stream_index}
+    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, video_stream_index_{video_stream_index}, audio_stream_index_{audio_stream_index}, video_frame_scaler_{video_codec_context_}
 {
     scale_width_ = scale_width;
     scale_height_ = scale_height;
+
+    packet_ = auto_delete_ressource<AVPacket>(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
+
+    if (!packet_)
+        throw std::runtime_error("av_packet_alloc");
 
     run();
 }
@@ -46,7 +53,7 @@ void VideoContentProvider::reader_main(std::stop_token st)
 
     {
         std::lock_guard<std::mutex> lock(mtx_reader_);
-        is_ready_ = init(scale_width_, scale_height_) == 0;
+        is_ready_ = true;
     }
 
     while (!st.stop_requested()) {
@@ -62,7 +69,8 @@ void VideoContentProvider::reader_main(std::stop_token st)
                 break;
 
             if (video_frame.value()) {
-                add_unscaled_video_frame(video_frame.value());
+                video_frame_scaler_.push(video_frame.value());
+                cv_scaler_.notify_one();
             }
         }
     }
@@ -81,32 +89,21 @@ void VideoContentProvider::scaler_main(std::stop_token st)
 
     while (!st.stop_requested()) {
         std::unique_lock<std::mutex> lock(mtx_scaler_);
-        cv_scaler_.wait(lock, st, [&] { return !video_frames_to_scale_queue_.empty(); });
+        cv_scaler_.wait(lock, st, [&] { return !video_frame_scaler_.empty(); });
 
-        if (!st.stop_requested() && !video_frames_to_scale_queue_.empty()) {
+        if (!st.stop_requested() && !video_frame_scaler_.empty()) {
             spdlog::trace("(thread {}, VideoContentProvider scaler) scale frame", std::this_thread::get_id());
 
-            VideoFrame* video_frame = video_frames_to_scale_queue_.front();
-            video_frames_to_scale_queue_.pop();
+            VideoFrame* video_frame = video_frame_scaler_.pop();
 
-            scale_frame(video_frame);
-
-            add_finished_video_frame(video_frame);
+            if (video_frame) {
+                video_frame_scaler_.scale_frame(video_frame);
+                add_finished_video_frame(video_frame);
+            }
         }
     }
 
     spdlog::debug("(thread {}, VideoContentProvider scaler) stopping", std::this_thread::get_id());
-}
-
-int VideoContentProvider::init(const int scale_width, const int scale_height)
-{
-    packet_ = auto_delete_ressource<AVPacket>(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
-
-    if (!packet_)
-        return show_error("av_packet_alloc");
-
-    // create scaling context
-    return resize_scaling_context(scale_width, scale_height);
 }
 
 std::optional<VideoFrame*> VideoContentProvider::read()
@@ -138,16 +135,6 @@ std::optional<VideoFrame*> VideoContentProvider::read()
     return std::nullopt;
 }
 
-void VideoContentProvider::add_unscaled_video_frame(VideoFrame* video_frame)
-{
-    {
-        std::lock_guard<std::mutex> lock(mtx_scaler_);
-        video_frames_to_scale_queue_.push(video_frame);
-    }
-
-    cv_scaler_.notify_one();
-}
-
 void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 {
     finished_video_frames_queue_.push(video_frame);
@@ -166,31 +153,6 @@ std::tuple<VideoFrame*, int, bool> VideoContentProvider::next_frame(const double
         cv_reader_.notify_one();
 
     return std::make_tuple(first_frame, static_cast<int>(finished_video_frames_queue_.size()), is_ready_);
-}
-
-void VideoContentProvider::scale_frame(VideoFrame* video_frame)
-{
-    // convert to destination format
-    if (scale_width_ != video_frame->width_ || scale_height_ != video_frame->height_)
-        resize_scaling_context(video_frame->width_, video_frame->height_);
-
-    if (scaling_context_)
-        sws_scale(scaling_context_.get(), video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), 0, video_codec_context_->height, video_frame->dst_buf_data_.data(), video_frame->dst_buf_linesize_.data());
-}
-
-int VideoContentProvider::resize_scaling_context(int width, int height)
-{
-    spdlog::trace("(thread {}, VideoContentProvider) resize scaling context to {}x{}", std::this_thread::get_id(), width, height);
-
-    scale_width_ = width;
-    scale_height_ = height;
-
-    scaling_context_.reset(sws_getContext(video_codec_context_->width, video_codec_context_->height, video_codec_context_->pix_fmt, scale_width_, scale_height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
-
-    if (!scaling_context_)
-        return show_error("sws_getContext");
-
-    return 0;
 }
 
 VideoFrame* VideoContentProvider::decode_video_packet(const AVPacket* packet, const int scale_width, const int scale_height)

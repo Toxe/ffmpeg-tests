@@ -10,6 +10,7 @@
 #include "error/error.hpp"
 #include "video/video_content_provider.hpp"
 #include "video/video_file.hpp"
+#include "video/video_frame.hpp"
 
 [[nodiscard]] std::string_view eval_args(int argc, char* argv[])
 {
