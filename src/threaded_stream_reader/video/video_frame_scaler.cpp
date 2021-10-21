@@ -1,7 +1,5 @@
 #include "video_frame_scaler.hpp"
 
-#include <thread>
-
 #include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
@@ -11,6 +9,7 @@ extern "C" {
 }
 
 #include "error/error.hpp"
+#include "video_content_provider.hpp"
 #include "video_frame.hpp"
 
 VideoFrameScaler::VideoFrameScaler(AVCodecContext* video_codec_context)
@@ -18,29 +17,56 @@ VideoFrameScaler::VideoFrameScaler(AVCodecContext* video_codec_context)
     video_codec_context_ = video_codec_context;
 }
 
-void VideoFrameScaler::push(VideoFrame* video_frame)
+VideoFrameScaler::~VideoFrameScaler()
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-    queue_.push(video_frame);
+    stop();
 }
 
-VideoFrame* VideoFrameScaler::pop()
+void VideoFrameScaler::run(VideoContentProvider* video_content_provider)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
+    spdlog::debug("(thread {}, VideoFrameScaler) run", std::this_thread::get_id());
 
-    if (queue_.empty())
-        return nullptr;
-
-    VideoFrame* video_frame = queue_.front();
-    queue_.pop();
-
-    return video_frame;
+    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider); });
 }
 
-bool VideoFrameScaler::empty()
+void VideoFrameScaler::stop()
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-    return queue_.empty();
+    thread_.request_stop();
+
+    if (thread_.joinable())
+        thread_.join();
+}
+
+void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_content_provider)
+{
+    spdlog::debug("(thread {}, VideoFrameScaler) starting", std::this_thread::get_id());
+
+    while (!st.stop_requested()) {
+        std::unique_lock<std::mutex> lock(mtx_);
+        cv_.wait(lock, st, [&] { return !queue_.empty(); });
+
+        if (!st.stop_requested() && !queue_.empty()) {
+            spdlog::trace("(thread {}, VideoFrameScaler) scale frame", std::this_thread::get_id());
+
+            VideoFrame* video_frame = queue_.front();
+            queue_.pop();
+
+            scale_frame(video_frame);
+            video_content_provider->add_finished_video_frame(video_frame);
+        }
+    }
+
+    spdlog::debug("(thread {}, VideoFrameScaler) stopping", std::this_thread::get_id());
+}
+
+void VideoFrameScaler::add_to_queue(VideoFrame* video_frame)
+{
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        queue_.push(video_frame);
+    }
+
+    cv_.notify_one();
 }
 
 void VideoFrameScaler::scale_frame(VideoFrame* video_frame)

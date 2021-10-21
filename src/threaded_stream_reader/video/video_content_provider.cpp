@@ -32,19 +32,16 @@ void VideoContentProvider::run()
     spdlog::debug("(thread {}, VideoContentProvider) run", std::this_thread::get_id());
 
     reader_thread_ = std::jthread([&](std::stop_token st) { reader_main(st); });
-    scaler_thread_ = std::jthread([&](std::stop_token st) { scaler_main(st); });
+    video_frame_scaler_.run(this);
 }
 
 void VideoContentProvider::stop()
 {
     reader_thread_.request_stop();
-    scaler_thread_.request_stop();
+    video_frame_scaler_.stop();
 
     if (reader_thread_.joinable())
         reader_thread_.join();
-
-    if (scaler_thread_.joinable())
-        scaler_thread_.join();
 }
 
 void VideoContentProvider::reader_main(std::stop_token st)
@@ -68,10 +65,8 @@ void VideoContentProvider::reader_main(std::stop_token st)
             if (!video_frame.has_value())
                 break;
 
-            if (video_frame.value()) {
-                video_frame_scaler_.push(video_frame.value());
-                cv_scaler_.notify_one();
-            }
+            if (video_frame.value())
+                video_frame_scaler_.add_to_queue(video_frame.value());
         }
     }
 
@@ -81,29 +76,6 @@ void VideoContentProvider::reader_main(std::stop_token st)
     }
 
     spdlog::debug("(thread {}, VideoContentProvider reader) stopping", std::this_thread::get_id());
-}
-
-void VideoContentProvider::scaler_main(std::stop_token st)
-{
-    spdlog::debug("(thread {}, VideoContentProvider scaler) starting", std::this_thread::get_id());
-
-    while (!st.stop_requested()) {
-        std::unique_lock<std::mutex> lock(mtx_scaler_);
-        cv_scaler_.wait(lock, st, [&] { return !video_frame_scaler_.empty(); });
-
-        if (!st.stop_requested() && !video_frame_scaler_.empty()) {
-            spdlog::trace("(thread {}, VideoContentProvider scaler) scale frame", std::this_thread::get_id());
-
-            VideoFrame* video_frame = video_frame_scaler_.pop();
-
-            if (video_frame) {
-                video_frame_scaler_.scale_frame(video_frame);
-                add_finished_video_frame(video_frame);
-            }
-        }
-    }
-
-    spdlog::debug("(thread {}, VideoContentProvider scaler) stopping", std::this_thread::get_id());
 }
 
 std::optional<VideoFrame*> VideoContentProvider::read()

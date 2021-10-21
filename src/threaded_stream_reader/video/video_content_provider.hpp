@@ -20,12 +20,9 @@ struct VideoFrame;
 
 class VideoContentProvider {
     std::mutex mtx_reader_;
-    std::mutex mtx_scaler_;
     std::condition_variable_any cv_reader_;
-    std::condition_variable_any cv_scaler_;
 
     std::jthread reader_thread_;
-    std::jthread scaler_thread_;
 
     AVFormatContext* format_context_ = nullptr;
     AVCodecContext* video_codec_context_ = nullptr;
@@ -45,13 +42,9 @@ class VideoContentProvider {
     VideoFrameScaler video_frame_scaler_;
 
     void reader_main(std::stop_token st);
-    void scaler_main(std::stop_token st);
 
     [[nodiscard]] std::optional<VideoFrame*> read();
     [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet, const int scale_width, const int scale_height);
-
-    void add_unscaled_video_frame(VideoFrame* video_frame);
-    void add_finished_video_frame(VideoFrame* video_frame);
 
 public:
     VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height);
@@ -59,6 +52,8 @@ public:
 
     void run();
     void stop();
+
+    void add_finished_video_frame(VideoFrame* video_frame);
 
     [[nodiscard]] std::tuple<VideoFrame*, int, bool> next_frame(const double playback_position);
 };

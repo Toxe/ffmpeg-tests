@@ -1,17 +1,24 @@
 #pragma once
 
+#include <condition_variable>
 #include <mutex>
 #include <queue>
+#include <stop_token>
+#include <thread>
 
 #include "auto_delete_ressource.hpp"
 
 struct AVCodecContext;
 struct SwsContext;
 
+struct VideoContentProvider;
 struct VideoFrame;
 
 class VideoFrameScaler {
     std::mutex mtx_;
+    std::condition_variable_any cv_;
+    std::jthread thread_;
+
     std::queue<VideoFrame*> queue_;
 
     auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
@@ -21,15 +28,18 @@ class VideoFrameScaler {
     int scale_width_ = 0;
     int scale_height_ = 0;
 
+    void main(std::stop_token st, VideoContentProvider* video_content_provider);
+
     int resize_scaling_context(int width, int height);
 
 public:
     VideoFrameScaler(AVCodecContext* video_codec_context);
+    ~VideoFrameScaler();
 
-    void push(VideoFrame* video_frame);
-    [[nodiscard]] VideoFrame* pop();
+    void run(VideoContentProvider* video_content_provider);
+    void stop();
 
-    [[nodiscard]] bool empty();
+    void add_to_queue(VideoFrame* video_frame);
 
     void scale_frame(VideoFrame* video_frame);
 };
