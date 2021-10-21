@@ -22,9 +22,11 @@ VideoFrameScaler::~VideoFrameScaler()
     stop();
 }
 
-void VideoFrameScaler::run(VideoContentProvider* video_content_provider)
+void VideoFrameScaler::run(VideoContentProvider* video_content_provider, const int width, const int height)
 {
     spdlog::debug("(thread {}, VideoFrameScaler) run", std::this_thread::get_id());
+
+    resize_scaling_context(width, height);
 
     thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider); });
 }
@@ -71,12 +73,15 @@ void VideoFrameScaler::add_to_queue(VideoFrame* video_frame)
 
 void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
 {
-    // convert to destination format
-    if (scale_width_ != video_frame->width_ || scale_height_ != video_frame->height_)
-        resize_scaling_context(video_frame->width_, video_frame->height_);
+    // // convert to destination format
+    // if (scale_width_ != video_frame->width_ || scale_height_ != video_frame->height_)
+    //     resize_scaling_context(video_frame->width_, video_frame->height_);
 
     if (scaling_context_)
         sws_scale(scaling_context_.get(), video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), 0, video_codec_context_->height, video_frame->dst_buf_data_.data(), video_frame->dst_buf_linesize_.data());
+
+    video_frame->width_ = scale_width_;
+    video_frame->height_ = scale_height_;
 }
 
 int VideoFrameScaler::resize_scaling_context(int width, int height)

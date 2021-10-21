@@ -30,16 +30,15 @@ class VideoFrameScaler {
 
     void main(std::stop_token st, VideoContentProvider* video_content_provider);
 
+    void scale_frame(VideoFrame* video_frame);
     int resize_scaling_context(int width, int height);
 
 public:
     VideoFrameScaler(AVCodecContext* video_codec_context);
     ~VideoFrameScaler();
 
-    void run(VideoContentProvider* video_content_provider);
+    void run(VideoContentProvider* video_content_provider, const int width, const int height);
     void stop();
 
     void add_to_queue(VideoFrame* video_frame);
-
-    void scale_frame(VideoFrame* video_frame);
 };
