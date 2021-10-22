@@ -1,5 +1,11 @@
 #include "video_frame.hpp"
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavutil/imgutils.h>
+#include <libavutil/frame.h>
+}
+
 #include "error/error.hpp"
 
 VideoFrame::VideoFrame(AVCodecContext* codec_context, int width, int height)

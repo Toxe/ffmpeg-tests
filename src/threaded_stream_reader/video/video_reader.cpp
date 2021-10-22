@@ -8,6 +8,7 @@
 extern "C" {
 #include <libavcodec/packet.h>
 #include <libavformat/avformat.h>
+#include <libavutil/imgutils.h>
 }
 
 #include "error/error.hpp"
