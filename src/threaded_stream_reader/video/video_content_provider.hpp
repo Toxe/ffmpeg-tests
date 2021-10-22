@@ -3,7 +3,7 @@
 #include <tuple>
 
 #include "video_frame_scaler.hpp"
-#include "video_frames_queue.hpp"
+#include "video_frame_queue.hpp"
 #include "video_reader.hpp"
 
 struct AVCodecContext;
@@ -17,7 +17,7 @@ class VideoContentProvider {
 
     bool is_ready_ = false;
 
-    VideoFramesQueue finished_video_frames_queue_;
+    VideoFrameQueue finished_video_frames_queue_;
 
     VideoReader video_reader_;
     VideoFrameScaler video_frame_scaler_;

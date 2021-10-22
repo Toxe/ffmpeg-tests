@@ -11,8 +11,8 @@ add_executable(threaded_stream_reader
     video/video_frame_scaler.hpp
     video/video_frame.cpp
     video/video_frame.hpp
-    video/video_frames_queue.cpp
-    video/video_frames_queue.hpp
+    video/video_frame_queue.cpp
+    video/video_frame_queue.hpp
     video/video_reader.cpp
     video/video_reader.hpp
 )

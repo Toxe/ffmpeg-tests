@@ -1,10 +1,10 @@
-#include "video_frames_queue.hpp"
+#include "video_frame_queue.hpp"
 
 #include <algorithm>
 
 #include "video_frame.hpp"
 
-void VideoFramesQueue::push(VideoFrame* frame)
+void VideoFrameQueue::push(VideoFrame* frame)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
@@ -12,7 +12,7 @@ void VideoFramesQueue::push(VideoFrame* frame)
     std::sort(queue_.begin(), queue_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
 }
 
-VideoFrame* VideoFramesQueue::pop(double playback_position)
+VideoFrame* VideoFrameQueue::pop(double playback_position)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
@@ -28,19 +28,19 @@ VideoFrame* VideoFramesQueue::pop(double playback_position)
     }
 }
 
-std::size_t VideoFramesQueue::size()
+std::size_t VideoFrameQueue::size()
 {
     std::lock_guard<std::mutex> lock(mtx_);
     return queue_.size();
 }
 
-bool VideoFramesQueue::empty()
+bool VideoFrameQueue::empty()
 {
     std::lock_guard<std::mutex> lock(mtx_);
     return queue_.empty();
 }
 
-bool VideoFramesQueue::full()
+bool VideoFrameQueue::full()
 {
     std::lock_guard<std::mutex> lock(mtx_);
     return queue_.size() >= max_queue_size_;

@@ -5,7 +5,7 @@
 
 struct VideoFrame;
 
-class VideoFramesQueue {
+class VideoFrameQueue {
     const std::size_t max_queue_size_ = 60;
 
     std::mutex mtx_;
