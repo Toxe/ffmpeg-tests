@@ -12,17 +12,21 @@ extern "C" {
 #include "video_content_provider.hpp"
 #include "video_frame.hpp"
 
+VideoFrameScaler::VideoFrameScaler(AVCodecContext* video_codec_context, const int width, const int height)
+{
+    video_codec_context_ = video_codec_context;
+
+    resize_scaling_context(video_codec_context, width, height);
+}
+
 VideoFrameScaler::~VideoFrameScaler()
 {
     stop();
 }
 
-void VideoFrameScaler::run(VideoContentProvider* video_content_provider, AVCodecContext* video_codec_context, const int width, const int height, std::latch& latch)
+void VideoFrameScaler::run(VideoContentProvider* video_content_provider, std::latch& latch)
 {
     spdlog::debug("(VideoFrameScaler) run");
-
-    video_codec_context_ = video_codec_context;
-    resize_scaling_context(width, height);
 
     thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
 }
@@ -82,14 +86,14 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
     video_frame->height_ = scale_height_;
 }
 
-int VideoFrameScaler::resize_scaling_context(int width, int height)
+int VideoFrameScaler::resize_scaling_context(AVCodecContext* video_codec_context, int width, int height)
 {
     spdlog::trace("(VideoFrameScaler) resize scaling context to {}x{}", width, height);
 
     scale_width_ = width;
     scale_height_ = height;
 
-    scaling_context_.reset(sws_getContext(video_codec_context_->width, video_codec_context_->height, video_codec_context_->pix_fmt, scale_width_, scale_height_, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
+    scaling_context_.reset(sws_getContext(video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
 
     if (!scaling_context_)
         return show_error("sws_getContext");

@@ -2,6 +2,7 @@
 
 #include <tuple>
 
+#include "video_file.hpp"
 #include "video_frame_scaler.hpp"
 #include "video_frame_queue.hpp"
 #include "video_reader.hpp"
@@ -23,10 +24,10 @@ class VideoContentProvider {
     VideoFrameScaler video_frame_scaler_;
 
 public:
-    VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index);
+    VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height);
     ~VideoContentProvider();
 
-    void run(AVCodecContext* video_codec_context, const int scale_width, const int scale_height);
+    void run();
     void stop();
 
     void add_video_frame_for_scaling(VideoFrame* video_frame);

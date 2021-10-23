@@ -11,7 +11,6 @@ extern "C" {
 }
 
 #include "auto_delete_ressource.hpp"
-#include "video_content_provider.hpp"
 
 class VideoFile {
     auto_delete_ressource<AVFormatContext> format_context_ = {nullptr, nullptr};
@@ -31,5 +30,10 @@ public:
     VideoFile(const std::string_view& full_filename);
 
     [[nodiscard]] bool is_open() const { return is_open_; }
-    [[nodiscard]] VideoContentProvider open_stream();
+
+    [[nodiscard]] AVFormatContext* format_context() const { return format_context_.get(); }
+    [[nodiscard]] AVCodecContext* audio_codec_context() const { return audio_codec_context_.get(); }
+    [[nodiscard]] AVCodecContext* video_codec_context() const { return video_codec_context_.get(); }
+    [[nodiscard]] int audio_stream_index() const { return audio_stream_index_; }
+    [[nodiscard]] int video_stream_index() const { return video_stream_index_; }
 };

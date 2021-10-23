@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
     spdlog::debug("(main) starting VideoContentProvider...");
 
     VideoFile video_file(filename);
-    VideoContentProvider video_content_provider(video_file.open_stream());
-    video_content_provider.run(video_file.video_codec_context_.get(), 640, 480);
+    VideoContentProvider video_content_provider(video_file, 640, 480);
+    video_content_provider.run();
 
     // begin playback
     auto playback_begin = std::chrono::steady_clock::now();

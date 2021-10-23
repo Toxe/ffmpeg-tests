@@ -15,9 +15,17 @@ extern "C" {
 #include "video_content_provider.hpp"
 #include "video_frame.hpp"
 
-VideoReader::VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index)
-    : format_context_{format_context}, video_codec_context_{video_codec_context}, audio_codec_context_{audio_codec_context}, video_stream_index_{video_stream_index}, audio_stream_index_{audio_stream_index}
+VideoReader::VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height)
 {
+    format_context_ = format_context;
+    video_codec_context_ = video_codec_context;
+    audio_codec_context_ = audio_codec_context;
+    video_stream_index_ = video_stream_index;
+    audio_stream_index_ = audio_stream_index;
+
+    scale_width_ = scale_width;
+    scale_height_ = scale_height;
+
     packet_ = auto_delete_ressource<AVPacket>(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
 
     if (!packet_)
@@ -29,12 +37,9 @@ VideoReader::~VideoReader()
     stop();
 }
 
-void VideoReader::run(VideoContentProvider* video_content_provider, const int scale_width, const int scale_height, std::latch& latch)
+void VideoReader::run(VideoContentProvider* video_content_provider, std::latch& latch)
 {
     spdlog::debug("(VideoReader) run");
-
-    scale_width_ = scale_width;
-    scale_height_ = scale_height;
 
     thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
 }

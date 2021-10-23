@@ -39,10 +39,10 @@ class VideoReader {
     [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet);
 
 public:
-    VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index);
+    VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height);
     ~VideoReader();
 
-    void run(VideoContentProvider* video_content_provider, const int scale_width, const int scale_height, std::latch& latch);
+    void run(VideoContentProvider* video_content_provider, std::latch& latch);
     void stop();
 
     void continue_reading();

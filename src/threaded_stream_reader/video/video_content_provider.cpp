@@ -8,8 +8,9 @@
 #include "error/error.hpp"
 #include "video_frame.hpp"
 
-VideoContentProvider::VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index)
-    : video_reader_{format_context, video_codec_context, audio_codec_context, video_stream_index, audio_stream_index}
+VideoContentProvider::VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height)
+    : video_frame_scaler_{video_file.video_codec_context(), scale_width, scale_height},
+      video_reader_{video_file.format_context(), video_file.video_codec_context(), video_file.audio_codec_context(), video_file.video_stream_index(), video_file.audio_stream_index(), scale_width, scale_height}
 {
 }
 
@@ -18,17 +19,17 @@ VideoContentProvider::~VideoContentProvider()
     stop();
 }
 
-void VideoContentProvider::run(AVCodecContext* video_codec_context, const int scale_width, const int scale_height)
+void VideoContentProvider::run()
 {
     spdlog::debug("(VideoContentProvider) run");
 
     std::latch latch1{1};
     std::latch latch2{1};
 
-    video_frame_scaler_.run(this, video_codec_context, scale_width, scale_height, latch1);
+    video_frame_scaler_.run(this, latch1);
     latch1.wait();
 
-    video_reader_.run(this, scale_width, scale_height, latch2);
+    video_reader_.run(this, latch2);
     latch2.wait();
 
     is_ready_ = true;
