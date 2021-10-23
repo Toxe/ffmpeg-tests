@@ -3,25 +3,21 @@
 #include <tuple>
 
 #include "video_file.hpp"
-#include "video_frame_scaler.hpp"
 #include "video_frame_queue.hpp"
+#include "video_frame_scaler.hpp"
 #include "video_reader.hpp"
 
 struct AVCodecContext;
 struct AVFormatContext;
 
-struct VideoFrame;
+class VideoFrame;
 
 class VideoContentProvider {
-    int scale_width_ = 0;
-    int scale_height_ = 0;
-
     bool is_ready_ = false;
 
     VideoFrameQueue finished_video_frames_queue_;
-
-    VideoReader video_reader_;
     VideoFrameScaler video_frame_scaler_;
+    VideoReader video_reader_;
 
 public:
     VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height);

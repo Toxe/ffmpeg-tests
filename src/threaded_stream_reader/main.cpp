@@ -1,5 +1,6 @@
 #include <chrono>
 #include <filesystem>
+#include <mutex>
 #include <string_view>
 #include <thread>
 
@@ -11,6 +12,15 @@
 #include "video/video_content_provider.hpp"
 #include "video/video_file.hpp"
 #include "video/video_frame.hpp"
+
+void do_something_with_the_frame(VideoFrame* frame)
+{
+    const auto pixels = frame->pixels();
+    uint8_t pixel = 0;
+
+    for (int i = 0; i < frame->width() * frame->height() * 4; ++i)
+        pixel ^= pixels[i];
+}
 
 [[nodiscard]] std::string_view eval_args(int argc, char* argv[])
 {
@@ -57,12 +67,14 @@ int main(int argc, char* argv[])
         const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
         if (frame) {
-            spdlog::trace("(thread {}, main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", std::this_thread::get_id(), playback_position.count(), frame->timestamp_, frames_available, ms.count());
+            spdlog::trace("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), frame->timestamp(), frames_available, ms.count());
 
             if (!can_begin_playback) {
                 spdlog::debug("(main) received first frame, begin playback");
                 can_begin_playback = true;
             }
+
+            do_something_with_the_frame(frame);
 
             delete frame;
         } else {

@@ -13,19 +13,19 @@ struct AVCodecContext;
 struct AVFormatContext;
 struct AVPacket;
 
+class VideoFrame;
 struct VideoContentProvider;
-struct VideoFrame;
 
 class VideoReader {
     std::mutex mtx_;
     std::condition_variable_any cv_;
     std::jthread thread_;
 
+    auto_delete_ressource<AVPacket> packet_ = {nullptr, nullptr};
+
     AVFormatContext* format_context_ = nullptr;
     AVCodecContext* video_codec_context_ = nullptr;
     AVCodecContext* audio_codec_context_ = nullptr;
-
-    auto_delete_ressource<AVPacket> packet_ = {nullptr, nullptr};
 
     int video_stream_index_ = -1;
     int audio_stream_index_ = -1;

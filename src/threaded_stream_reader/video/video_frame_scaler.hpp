@@ -12,8 +12,8 @@
 struct AVCodecContext;
 struct SwsContext;
 
+class VideoFrame;
 struct VideoContentProvider;
-struct VideoFrame;
 
 class VideoFrameScaler {
     std::mutex mtx_;

@@ -122,7 +122,7 @@ VideoFrame* VideoReader::decode_video_packet(const AVPacket* packet)
         const AVStream* stream = format_context_->streams[video_stream_index_];
         VideoFrame* video_frame = new VideoFrame{video_codec_context_, scale_width_, scale_height_};
 
-        ret = avcodec_receive_frame(video_codec_context_, video_frame->frame_);
+        ret = avcodec_receive_frame(video_codec_context_, video_frame->frame());
 
         if (ret < 0) {
             delete video_frame;
@@ -135,9 +135,9 @@ VideoFrame* VideoReader::decode_video_packet(const AVPacket* packet)
         }
 
         // copy decoded frame to image buffer
-        av_image_copy(video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), const_cast<const uint8_t**>(video_frame->frame_->data), video_frame->frame_->linesize, video_codec_context_->pix_fmt, video_codec_context_->width, video_codec_context_->height);
+        av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->data), video_frame->frame()->linesize, video_codec_context_->pix_fmt, video_codec_context_->width, video_codec_context_->height);
 
-        video_frame->update(video_frame->frame_->best_effort_timestamp, av_q2d(stream->time_base));
+        video_frame->update_timestamp(av_q2d(stream->time_base));
 
         return video_frame;
     }

@@ -52,8 +52,8 @@ void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
 {
     finished_video_frames_queue_.push(video_frame);
 
-    spdlog::trace("(thread {}, VideoReader) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
-        std::this_thread::get_id(), video_frame->width_, video_frame->height_, video_frame->timestamp_, finished_video_frames_queue_.size());
+    spdlog::trace("(VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
+        video_frame->width(), video_frame->height(), video_frame->timestamp(), finished_video_frames_queue_.size());
 }
 
 std::tuple<VideoFrame*, int, bool> VideoContentProvider::next_frame(const double playback_position)

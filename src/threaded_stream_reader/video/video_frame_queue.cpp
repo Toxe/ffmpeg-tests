@@ -9,7 +9,7 @@ void VideoFrameQueue::push(VideoFrame* frame)
     std::lock_guard<std::mutex> lock(mtx_);
 
     queue_.push_back(frame);
-    std::sort(queue_.begin(), queue_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp_ < right->timestamp_; });
+    std::sort(queue_.begin(), queue_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp() < right->timestamp(); });
 }
 
 VideoFrame* VideoFrameQueue::pop(double playback_position)
@@ -19,7 +19,7 @@ VideoFrame* VideoFrameQueue::pop(double playback_position)
     if (queue_.empty())
         return nullptr;
 
-    if (queue_.front()->timestamp_ <= playback_position) {
+    if (queue_.front()->timestamp() <= playback_position) {
         auto frame = queue_.front();
         queue_.erase(queue_.begin());
         return frame;

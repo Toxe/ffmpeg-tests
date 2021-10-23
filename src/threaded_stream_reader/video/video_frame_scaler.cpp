@@ -80,10 +80,9 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
     //     resize_scaling_context(video_frame->width_, video_frame->height_);
 
     if (scaling_context_)
-        sws_scale(scaling_context_.get(), video_frame->img_buf_data_.data(), video_frame->img_buf_linesize_.data(), 0, video_codec_context_->height, video_frame->dst_buf_data_.data(), video_frame->dst_buf_linesize_.data());
+        sws_scale(scaling_context_.get(), video_frame->img_data(), video_frame->img_linesizes(), 0, video_codec_context_->height, video_frame->dst_data(), video_frame->dst_linesizes());
 
-    video_frame->width_ = scale_width_;
-    video_frame->height_ = scale_height_;
+    video_frame->update_dimensions(scale_width_, scale_height_);
 }
 
 int VideoFrameScaler::resize_scaling_context(AVCodecContext* video_codec_context, int width, int height)
