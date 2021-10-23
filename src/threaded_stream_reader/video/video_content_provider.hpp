@@ -23,10 +23,10 @@ class VideoContentProvider {
     VideoFrameScaler video_frame_scaler_;
 
 public:
-    VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height);
+    VideoContentProvider(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index);
     ~VideoContentProvider();
 
-    void run();
+    void run(AVCodecContext* video_codec_context, const int scale_width, const int scale_height);
     void stop();
 
     void add_video_frame_for_scaling(VideoFrame* video_frame);

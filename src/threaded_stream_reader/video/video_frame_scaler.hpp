@@ -1,6 +1,7 @@
 #pragma once
 
 #include <condition_variable>
+#include <latch>
 #include <mutex>
 #include <queue>
 #include <stop_token>
@@ -23,21 +24,20 @@ class VideoFrameScaler {
 
     auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
 
-    AVCodecContext* video_codec_context_;
+    AVCodecContext* video_codec_context_ = nullptr;
 
     int scale_width_ = 0;
     int scale_height_ = 0;
 
-    void main(std::stop_token st, VideoContentProvider* video_content_provider);
+    void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 
     void scale_frame(VideoFrame* video_frame);
     int resize_scaling_context(int width, int height);
 
 public:
-    VideoFrameScaler(AVCodecContext* video_codec_context);
     ~VideoFrameScaler();
 
-    void run(VideoContentProvider* video_content_provider, const int width, const int height);
+    void run(VideoContentProvider* video_content_provider, AVCodecContext* video_codec_context, const int width, const int height, std::latch& latch);
     void stop();
 
     void add_to_queue(VideoFrame* video_frame);

@@ -98,10 +98,10 @@ int VideoFile::open_file(const std::string_view& full_filename)
     return 0;
 }
 
-VideoContentProvider VideoFile::open_stream(const int scale_width, const int scale_height)
+VideoContentProvider VideoFile::open_stream()
 {
     if (!is_open())
         throw std::runtime_error("video file is not open");
 
-    return VideoContentProvider(format_context_.get(), video_codec_context_.get(), audio_codec_context_.get(), video_stream_index_, audio_stream_index_, scale_width, scale_height);
+    return VideoContentProvider(format_context_.get(), video_codec_context_.get(), audio_codec_context_.get(), video_stream_index_, audio_stream_index_);
 }

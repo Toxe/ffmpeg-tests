@@ -1,6 +1,7 @@
 #pragma once
 
 #include <condition_variable>
+#include <latch>
 #include <mutex>
 #include <optional>
 #include <stop_token>
@@ -32,7 +33,7 @@ class VideoReader {
     int scale_width_ = 0;
     int scale_height_ = 0;
 
-    void main(std::stop_token st, VideoContentProvider* video_content_provider);
+    void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 
     [[nodiscard]] std::optional<VideoFrame*> read();
     [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet);
@@ -41,7 +42,7 @@ public:
     VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index);
     ~VideoReader();
 
-    void run(VideoContentProvider* video_content_provider, const int scale_width, const int scale_height);
+    void run(VideoContentProvider* video_content_provider, const int scale_width, const int scale_height, std::latch& latch);
     void stop();
 
     void continue_reading();

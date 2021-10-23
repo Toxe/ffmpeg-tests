@@ -29,14 +29,14 @@ VideoReader::~VideoReader()
     stop();
 }
 
-void VideoReader::run(VideoContentProvider* video_content_provider, const int scale_width, const int scale_height)
+void VideoReader::run(VideoContentProvider* video_content_provider, const int scale_width, const int scale_height, std::latch& latch)
 {
-    spdlog::debug("(thread {}, VideoReader) run", std::this_thread::get_id());
+    spdlog::debug("(VideoReader) run");
 
     scale_width_ = scale_width;
     scale_height_ = scale_height;
 
-    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider); });
+    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
 }
 
 void VideoReader::stop()
@@ -47,9 +47,11 @@ void VideoReader::stop()
         thread_.join();
 }
 
-void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_provider)
+void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)
 {
-    spdlog::debug("(thread {}, VideoReader) starting", std::this_thread::get_id());
+    spdlog::debug("(VideoReader) starting");
+
+    latch.count_down();
 
     while (!st.stop_requested()) {
         {
@@ -68,7 +70,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
         }
     }
 
-    spdlog::debug("(thread {}, VideoReader) stopping", std::this_thread::get_id());
+    spdlog::debug("(VideoReader) stopping");
 }
 
 std::optional<VideoFrame*> VideoReader::read()

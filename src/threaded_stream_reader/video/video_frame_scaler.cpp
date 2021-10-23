@@ -12,23 +12,19 @@ extern "C" {
 #include "video_content_provider.hpp"
 #include "video_frame.hpp"
 
-VideoFrameScaler::VideoFrameScaler(AVCodecContext* video_codec_context)
-{
-    video_codec_context_ = video_codec_context;
-}
-
 VideoFrameScaler::~VideoFrameScaler()
 {
     stop();
 }
 
-void VideoFrameScaler::run(VideoContentProvider* video_content_provider, const int width, const int height)
+void VideoFrameScaler::run(VideoContentProvider* video_content_provider, AVCodecContext* video_codec_context, const int width, const int height, std::latch& latch)
 {
-    spdlog::debug("(thread {}, VideoFrameScaler) run", std::this_thread::get_id());
+    spdlog::debug("(VideoFrameScaler) run");
 
+    video_codec_context_ = video_codec_context;
     resize_scaling_context(width, height);
 
-    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider); });
+    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
 }
 
 void VideoFrameScaler::stop()
@@ -39,16 +35,18 @@ void VideoFrameScaler::stop()
         thread_.join();
 }
 
-void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_content_provider)
+void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)
 {
-    spdlog::debug("(thread {}, VideoFrameScaler) starting", std::this_thread::get_id());
+    spdlog::debug("(VideoFrameScaler) starting");
+
+    latch.count_down();
 
     while (!st.stop_requested()) {
         std::unique_lock<std::mutex> lock(mtx_);
         cv_.wait(lock, st, [&] { return !queue_.empty(); });
 
         if (!st.stop_requested() && !queue_.empty()) {
-            spdlog::trace("(thread {}, VideoFrameScaler) scale frame", std::this_thread::get_id());
+            spdlog::trace("(VideoFrameScaler) scale frame");
 
             VideoFrame* video_frame = queue_.front();
             queue_.pop();
@@ -58,7 +56,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
     }
 
-    spdlog::debug("(thread {}, VideoFrameScaler) stopping", std::this_thread::get_id());
+    spdlog::debug("(VideoFrameScaler) stopping");
 }
 
 void VideoFrameScaler::add_to_queue(VideoFrame* video_frame)
@@ -86,7 +84,7 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
 
 int VideoFrameScaler::resize_scaling_context(int width, int height)
 {
-    spdlog::trace("(thread {}, VideoFrameScaler) resize scaling context to {}x{}", std::this_thread::get_id(), width, height);
+    spdlog::trace("(VideoFrameScaler) resize scaling context to {}x{}", width, height);
 
     scale_width_ = width;
     scale_height_ = height;

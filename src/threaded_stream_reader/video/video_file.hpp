@@ -31,5 +31,5 @@ public:
     VideoFile(const std::string_view& full_filename);
 
     [[nodiscard]] bool is_open() const { return is_open_; }
-    [[nodiscard]] VideoContentProvider open_stream(const int scale_width, const int scale_height);
+    [[nodiscard]] VideoContentProvider open_stream();
 };

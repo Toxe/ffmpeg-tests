@@ -29,17 +29,17 @@ int main(int argc, char* argv[])
 
     std::string_view filename = eval_args(argc, argv);
 
-    spdlog::debug("(thread {}, main) starting VideoContentProvider...", std::this_thread::get_id());
+    spdlog::debug("(main) starting VideoContentProvider...");
 
     VideoFile video_file(filename);
-    VideoContentProvider video_content_provider(video_file.open_stream(640, 480));
-    video_content_provider.run();
+    VideoContentProvider video_content_provider(video_file.open_stream());
+    video_content_provider.run(video_file.video_codec_context_.get(), 640, 480);
 
     // begin playback
     auto playback_begin = std::chrono::steady_clock::now();
     bool can_begin_playback = false;
 
-    spdlog::debug("(thread {}, main) main loop...", std::this_thread::get_id());
+    spdlog::debug("(main) main loop...");
 
     while (true) {
         // do some work
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
             spdlog::trace("(thread {}, main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", std::this_thread::get_id(), playback_position.count(), frame->timestamp_, frames_available, ms.count());
 
             if (!can_begin_playback) {
-                spdlog::debug("(thread {}, main) received first frame, begin playback", std::this_thread::get_id());
+                spdlog::debug("(main) received first frame, begin playback");
                 can_begin_playback = true;
             }
 
@@ -71,9 +71,9 @@ int main(int argc, char* argv[])
         }
     }
 
-    spdlog::debug("(thread {}, main) playback stopped", std::this_thread::get_id());
+    spdlog::debug("(main) playback stopped");
 
     video_content_provider.stop();
 
-    spdlog::debug("(thread {}, main) quit", std::this_thread::get_id());
+    spdlog::debug("(main) quit");
 }
