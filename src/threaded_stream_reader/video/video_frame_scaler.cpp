@@ -52,22 +52,22 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         if (!st.stop_requested() && !queue_.empty()) {
             spdlog::trace("(VideoFrameScaler) scale frame");
 
-            VideoFrame* video_frame = queue_.front();
+            std::unique_ptr<VideoFrame> video_frame = std::move(queue_.front());
             queue_.pop();
 
-            scale_frame(video_frame);
-            video_content_provider->add_finished_video_frame(video_frame);
+            scale_frame(video_frame.get());
+            video_content_provider->add_finished_video_frame(std::move(video_frame));
         }
     }
 
     spdlog::debug("(VideoFrameScaler) stopping");
 }
 
-void VideoFrameScaler::add_to_queue(VideoFrame* video_frame)
+void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)
 {
     {
         std::lock_guard<std::mutex> lock(mtx_);
-        queue_.push(video_frame);
+        queue_.push(std::move(video_frame));
     }
 
     cv_.notify_one();

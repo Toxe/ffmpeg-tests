@@ -43,27 +43,27 @@ void VideoContentProvider::stop()
     video_frame_scaler_.stop();
 }
 
-void VideoContentProvider::add_video_frame_for_scaling(VideoFrame* video_frame)
+void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFrame> video_frame)
 {
-    video_frame_scaler_.add_to_queue(video_frame);
+    video_frame_scaler_.add_to_queue(std::move(video_frame));
 }
 
-void VideoContentProvider::add_finished_video_frame(VideoFrame* video_frame)
+void VideoContentProvider::add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame)
 {
-    finished_video_frames_queue_.push(video_frame);
-
     spdlog::trace("(VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
-        video_frame->width(), video_frame->height(), video_frame->timestamp(), finished_video_frames_queue_.size());
+        video_frame->width(), video_frame->height(), video_frame->timestamp(), finished_video_frames_queue_.size() + 1);
+
+    finished_video_frames_queue_.push(std::move(video_frame));
 }
 
-std::tuple<VideoFrame*, int, bool> VideoContentProvider::next_frame(const double playback_position)
+std::tuple<std::unique_ptr<VideoFrame>, int, bool> VideoContentProvider::next_frame(const double playback_position)
 {
-    VideoFrame* video_frame = finished_video_frames_queue_.pop(playback_position);
+    std::unique_ptr<VideoFrame> video_frame = std::move(finished_video_frames_queue_.pop(playback_position));
 
     if (video_frame && !finished_video_frames_queue_.full())
         video_reader_.continue_reading();
 
-    return std::make_tuple(video_frame, static_cast<int>(finished_video_frames_queue_.size()), is_ready_);
+    return std::make_tuple(std::move(video_frame), static_cast<int>(finished_video_frames_queue_.size()), is_ready_);
 }
 
 bool VideoContentProvider::finished_video_frames_queue_is_full()

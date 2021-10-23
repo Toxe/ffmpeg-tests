@@ -71,14 +71,14 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
                 break;
 
             if (video_frame.value())
-                video_content_provider->add_video_frame_for_scaling(video_frame.value());
+                video_content_provider->add_video_frame_for_scaling(std::move(video_frame.value()));
         }
     }
 
     spdlog::debug("(VideoReader) stopping");
 }
 
-std::optional<VideoFrame*> VideoReader::read()
+std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 {
     // read until we get at least one video frame
     while (true) {
@@ -89,7 +89,7 @@ std::optional<VideoFrame*> VideoReader::read()
 
         // process only interesting packets, drop the rest
         if (packet_->stream_index == video_stream_index_) {
-            VideoFrame* video_frame = decode_video_packet(packet_.get());
+            std::unique_ptr<VideoFrame> video_frame = decode_video_packet(packet_.get());
             av_packet_unref(packet_.get());
             return video_frame;
         } else if (packet_->stream_index == audio_stream_index_) {
@@ -107,7 +107,7 @@ std::optional<VideoFrame*> VideoReader::read()
     return std::nullopt;
 }
 
-VideoFrame* VideoReader::decode_video_packet(const AVPacket* packet)
+std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* packet)
 {
     // send packet to the decoder
     int ret = avcodec_send_packet(video_codec_context_, packet);
@@ -120,12 +120,12 @@ VideoFrame* VideoReader::decode_video_packet(const AVPacket* packet)
     // get all available frames from the decoder
     while (ret >= 0) {
         const AVStream* stream = format_context_->streams[video_stream_index_];
-        VideoFrame* video_frame = new VideoFrame{video_codec_context_, scale_width_, scale_height_};
+        std::unique_ptr<VideoFrame> video_frame = std::make_unique<VideoFrame>(video_codec_context_, scale_width_, scale_height_);
 
         ret = avcodec_receive_frame(video_codec_context_, video_frame->frame());
 
         if (ret < 0) {
-            delete video_frame;
+            // delete video_frame;
 
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
                 return nullptr;

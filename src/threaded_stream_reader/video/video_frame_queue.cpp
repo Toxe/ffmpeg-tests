@@ -4,15 +4,15 @@
 
 #include "video_frame.hpp"
 
-void VideoFrameQueue::push(VideoFrame* frame)
+void VideoFrameQueue::push(std::unique_ptr<VideoFrame> frame)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
-    queue_.push_back(frame);
-    std::sort(queue_.begin(), queue_.end(), [](const VideoFrame* left, const VideoFrame* right) { return left->timestamp() < right->timestamp(); });
+    queue_.push_back(std::move(frame));
+    std::sort(queue_.begin(), queue_.end(), [](const std::unique_ptr<VideoFrame>& left, const std::unique_ptr<VideoFrame>& right) { return left->timestamp() < right->timestamp(); });
 }
 
-VideoFrame* VideoFrameQueue::pop(double playback_position)
+std::unique_ptr<VideoFrame> VideoFrameQueue::pop(double playback_position)
 {
     std::lock_guard<std::mutex> lock(mtx_);
 
@@ -20,7 +20,7 @@ VideoFrame* VideoFrameQueue::pop(double playback_position)
         return nullptr;
 
     if (queue_.front()->timestamp() <= playback_position) {
-        auto frame = queue_.front();
+        auto frame = std::move(queue_.front());
         queue_.erase(queue_.begin());
         return frame;
     } else {

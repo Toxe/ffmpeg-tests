@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <tuple>
 
 #include "video_file.hpp"
@@ -26,10 +27,10 @@ public:
     void run();
     void stop();
 
-    void add_video_frame_for_scaling(VideoFrame* video_frame);
-    void add_finished_video_frame(VideoFrame* video_frame);
+    void add_video_frame_for_scaling(std::unique_ptr<VideoFrame> video_frame);
+    void add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame);
 
-    [[nodiscard]] std::tuple<VideoFrame*, int, bool> next_frame(const double playback_position);
+    [[nodiscard]] std::tuple<std::unique_ptr<VideoFrame>, int, bool> next_frame(const double playback_position);
 
     bool finished_video_frames_queue_is_full();
 };

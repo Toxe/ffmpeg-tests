@@ -62,21 +62,19 @@ int main(int argc, char* argv[])
         const std::chrono::duration<double> playback_position = std::chrono::steady_clock::now() - playback_begin;
 
         const auto t1 = std::chrono::high_resolution_clock::now();
-        auto [frame, frames_available, is_ready] = video_content_provider.next_frame(playback_position.count());
+        auto [video_frame, frames_available, is_ready] = video_content_provider.next_frame(playback_position.count());
         const auto t2 = std::chrono::high_resolution_clock::now();
         const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
-        if (frame) {
-            spdlog::trace("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), frame->timestamp(), frames_available, ms.count());
+        if (video_frame) {
+            spdlog::trace("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), video_frame->timestamp(), frames_available, ms.count());
 
             if (!can_begin_playback) {
                 spdlog::debug("(main) received first frame, begin playback");
                 can_begin_playback = true;
             }
 
-            do_something_with_the_frame(frame);
-
-            delete frame;
+            do_something_with_the_frame(video_frame.get());
         } else {
             if (can_begin_playback && !is_ready && frames_available == 0)
                 break;

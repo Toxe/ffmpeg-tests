@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <vector>
 
@@ -9,11 +10,11 @@ class VideoFrameQueue {
     const std::size_t max_queue_size_ = 60;
 
     std::mutex mtx_;
-    std::vector<VideoFrame*> queue_;
+    std::vector<std::unique_ptr<VideoFrame>> queue_;
 
 public:
-    void push(VideoFrame* frame);
-    [[nodiscard]] VideoFrame* pop(double playback_position);
+    void push(std::unique_ptr<VideoFrame> frame);
+    [[nodiscard]] std::unique_ptr<VideoFrame> pop(double playback_position);
 
     [[nodiscard]] std::size_t size();
     [[nodiscard]] bool empty();

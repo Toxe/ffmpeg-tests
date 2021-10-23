@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <latch>
+#include <memory>
 #include <mutex>
 #include <queue>
 #include <stop_token>
@@ -20,7 +21,7 @@ class VideoFrameScaler {
     std::condition_variable_any cv_;
     std::jthread thread_;
 
-    std::queue<VideoFrame*> queue_;
+    std::queue<std::unique_ptr<VideoFrame>> queue_;
 
     auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
 
@@ -41,5 +42,5 @@ public:
     void run(VideoContentProvider* video_content_provider, std::latch& latch);
     void stop();
 
-    void add_to_queue(VideoFrame* video_frame);
+    void add_to_queue(std::unique_ptr<VideoFrame> video_frame);
 };

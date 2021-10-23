@@ -2,6 +2,7 @@
 
 #include <condition_variable>
 #include <latch>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <stop_token>
@@ -35,8 +36,8 @@ class VideoReader {
 
     void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 
-    [[nodiscard]] std::optional<VideoFrame*> read();
-    [[nodiscard]] VideoFrame* decode_video_packet(const AVPacket* packet);
+    [[nodiscard]] std::optional<std::unique_ptr<VideoFrame>> read();
+    [[nodiscard]] std::unique_ptr<VideoFrame> decode_video_packet(const AVPacket* packet);
 
 public:
     VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height);
