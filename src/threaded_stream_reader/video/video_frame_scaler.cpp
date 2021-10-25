@@ -43,7 +43,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
 {
     spdlog::debug("(VideoFrameScaler) starting");
 
-    latch.count_down();
+    latch.arrive_and_wait();
 
     while (!st.stop_requested()) {
         std::unique_lock<std::mutex> lock(mtx_);

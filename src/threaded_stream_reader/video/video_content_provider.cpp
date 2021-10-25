@@ -23,14 +23,12 @@ void VideoContentProvider::run()
 {
     spdlog::debug("(VideoContentProvider) run");
 
-    std::latch latch1{1};
-    std::latch latch2{1};
+    std::latch latch{3};
 
-    video_frame_scaler_.run(this, latch1);
-    latch1.wait();
+    video_frame_scaler_.run(this, latch);
+    video_reader_.run(this, latch);
 
-    video_reader_.run(this, latch2);
-    latch2.wait();
+    latch.arrive_and_wait();
 }
 
 void VideoContentProvider::stop()

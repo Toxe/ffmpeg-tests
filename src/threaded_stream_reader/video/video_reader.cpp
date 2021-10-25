@@ -56,6 +56,8 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
 {
     spdlog::debug("(VideoReader) starting");
 
+    latch.arrive_and_wait();
+
     {
         std::lock_guard<std::mutex> lock(mtx_);
         has_started_ = true;
