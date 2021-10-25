@@ -34,17 +34,21 @@ VideoFrameScaler::~VideoFrameScaler()
 
 void VideoFrameScaler::run(VideoContentProvider* video_content_provider, std::latch& latch)
 {
-    spdlog::debug("(VideoFrameScaler) run");
+    if (!thread_.joinable()) {
+        spdlog::debug("(VideoFrameScaler) run");
 
-    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
+        thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
+    }
 }
 
 void VideoFrameScaler::stop()
 {
-    thread_.request_stop();
+    if (thread_.joinable()) {
+        spdlog::debug("(VideoFrameScaler) stop");
 
-    if (thread_.joinable())
+        thread_.request_stop();
         thread_.join();
+    }
 }
 
 void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)

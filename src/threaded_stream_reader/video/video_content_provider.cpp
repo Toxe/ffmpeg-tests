@@ -21,20 +21,30 @@ VideoContentProvider::~VideoContentProvider()
 
 void VideoContentProvider::run()
 {
-    spdlog::debug("(VideoContentProvider) run");
+    if (!is_running_) {
+        spdlog::debug("(VideoContentProvider) run");
 
-    std::latch latch{3};
+        std::latch latch{3};
 
-    video_frame_scaler_.run(this, latch);
-    video_reader_.run(this, latch);
+        video_frame_scaler_.run(this, latch);
+        video_reader_.run(this, latch);
 
-    latch.arrive_and_wait();
+        latch.arrive_and_wait();
+
+        is_running_ = true;
+    }
 }
 
 void VideoContentProvider::stop()
 {
-    video_reader_.stop();
-    video_frame_scaler_.stop();
+    if (is_running_) {
+        spdlog::debug("(VideoContentProvider) stop");
+
+        video_reader_.stop();
+        video_frame_scaler_.stop();
+
+        is_running_ = false;
+    }
 }
 
 void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFrame> video_frame)

@@ -39,17 +39,21 @@ VideoReader::~VideoReader()
 
 void VideoReader::run(VideoContentProvider* video_content_provider, std::latch& latch)
 {
-    spdlog::debug("(VideoReader) run");
+    if (!thread_.joinable()) {
+        spdlog::debug("(VideoReader) run");
 
-    thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
+        thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
+    }
 }
 
 void VideoReader::stop()
 {
-    thread_.request_stop();
+    if (thread_.joinable()) {
+        spdlog::debug("(VideoReader) stop");
 
-    if (thread_.joinable())
+        thread_.request_stop();
         thread_.join();
+    }
 }
 
 void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)

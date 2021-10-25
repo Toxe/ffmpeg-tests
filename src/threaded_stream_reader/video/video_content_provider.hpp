@@ -18,6 +18,8 @@ class VideoContentProvider {
     VideoFrameScaler video_frame_scaler_;
     VideoReader video_reader_;
 
+    bool is_running_ = false;
+
 public:
     VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height);
     ~VideoContentProvider();
