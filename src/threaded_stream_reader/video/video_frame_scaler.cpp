@@ -1,5 +1,7 @@
 #include "video_frame_scaler.hpp"
 
+#include <stdexcept>
+
 #include <fmt/ostream.h>
 #include <spdlog/spdlog.h>
 
@@ -16,7 +18,13 @@ VideoFrameScaler::VideoFrameScaler(AVCodecContext* video_codec_context, const in
 {
     video_codec_context_ = video_codec_context;
 
-    resize_scaling_context(video_codec_context, width, height);
+    scale_width_ = width;
+    scale_height_ = height;
+
+    scaling_context_ = auto_delete_ressource<SwsContext>(sws_getContext(video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr), [](SwsContext* ctx) { sws_freeContext(ctx); });
+
+    if (!scaling_context_)
+        throw std::runtime_error("sws_getContext");
 }
 
 VideoFrameScaler::~VideoFrameScaler()
