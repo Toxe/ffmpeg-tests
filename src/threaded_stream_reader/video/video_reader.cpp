@@ -56,7 +56,10 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
 {
     spdlog::debug("(VideoReader) starting");
 
-    latch.count_down();
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        has_started_ = true;
+    }
 
     while (!st.stop_requested()) {
         {
@@ -73,6 +76,11 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
             if (video_frame.value())
                 video_content_provider->add_video_frame_for_scaling(std::move(video_frame.value()));
         }
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        has_finished_ = true;
     }
 
     spdlog::debug("(VideoReader) stopping");
@@ -148,4 +156,10 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
 void VideoReader::continue_reading()
 {
     cv_.notify_one();
+}
+
+bool VideoReader::has_finished()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    return has_started_ && has_finished_;
 }

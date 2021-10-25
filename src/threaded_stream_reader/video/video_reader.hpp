@@ -34,6 +34,9 @@ class VideoReader {
     int scale_width_ = 0;
     int scale_height_ = 0;
 
+    bool has_started_ = false;
+    bool has_finished_ = false;
+
     void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 
     [[nodiscard]] std::optional<std::unique_ptr<VideoFrame>> read();
@@ -47,4 +50,6 @@ public:
     void stop();
 
     void continue_reading();
+
+    bool has_finished();
 };

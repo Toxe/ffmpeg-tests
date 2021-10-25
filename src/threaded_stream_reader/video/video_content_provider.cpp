@@ -31,14 +31,10 @@ void VideoContentProvider::run()
 
     video_reader_.run(this, latch2);
     latch2.wait();
-
-    is_ready_ = true;
 }
 
 void VideoContentProvider::stop()
 {
-    is_ready_ = false;
-
     video_reader_.stop();
     video_frame_scaler_.stop();
 }
@@ -56,14 +52,14 @@ void VideoContentProvider::add_finished_video_frame(std::unique_ptr<VideoFrame> 
     finished_video_frames_queue_.push(std::move(video_frame));
 }
 
-std::tuple<std::unique_ptr<VideoFrame>, int, bool> VideoContentProvider::next_frame(const double playback_position)
+std::tuple<std::unique_ptr<VideoFrame>, int> VideoContentProvider::next_frame(const double playback_position)
 {
     std::unique_ptr<VideoFrame> video_frame = std::move(finished_video_frames_queue_.pop(playback_position));
 
     if (video_frame && !finished_video_frames_queue_.full())
         video_reader_.continue_reading();
 
-    return std::make_tuple(std::move(video_frame), static_cast<int>(finished_video_frames_queue_.size()), is_ready_);
+    return std::make_tuple(std::move(video_frame), static_cast<int>(finished_video_frames_queue_.size()));
 }
 
 bool VideoContentProvider::finished_video_frames_queue_is_full()

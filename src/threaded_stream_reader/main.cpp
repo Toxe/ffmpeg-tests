@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     // begin playback
     auto playback_begin = std::chrono::steady_clock::now();
-    bool can_begin_playback = false;
+    bool received_first_real_frame = false;
 
     spdlog::debug("(main) main loop...");
 
@@ -56,29 +56,29 @@ int main(int argc, char* argv[])
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
         // current position in playback
-        if (!can_begin_playback)
+        if (!received_first_real_frame)
             playback_begin = std::chrono::steady_clock::now();
 
         const std::chrono::duration<double> playback_position = std::chrono::steady_clock::now() - playback_begin;
 
         const auto t1 = std::chrono::high_resolution_clock::now();
-        auto [video_frame, frames_available, is_ready] = video_content_provider.next_frame(playback_position.count());
+        auto [video_frame, frames_available] = video_content_provider.next_frame(playback_position.count());
         const auto t2 = std::chrono::high_resolution_clock::now();
         const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
         if (video_frame) {
             spdlog::trace("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), video_frame->timestamp(), frames_available, ms.count());
 
-            if (!can_begin_playback) {
+            if (!received_first_real_frame) {
                 spdlog::debug("(main) received first frame, begin playback");
-                can_begin_playback = true;
+                received_first_real_frame = true;
             }
 
             do_something_with_the_frame(video_frame.get());
-        } else {
-            if (can_begin_playback && !is_ready && frames_available == 0)
-                break;
         }
+
+        if (received_first_real_frame && frames_available == 0 && video_content_provider.has_finished())
+            break;
     }
 
     spdlog::debug("(main) playback stopped");
