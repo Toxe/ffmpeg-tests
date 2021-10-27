@@ -58,10 +58,12 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
     latch.arrive_and_wait();
 
     while (!st.stop_requested()) {
-        std::unique_lock<std::mutex> lock(mtx_);
-        cv_.wait(lock, st, [&] { return !queue_.empty(); });
+        {
+            std::unique_lock<std::mutex> lock(mtx_);
+            cv_.wait(lock, st, [&] { return !queue_.empty(); });
+        }
 
-        if (!st.stop_requested() && !queue_.empty()) {
+        if (!st.stop_requested()) {
             spdlog::trace("(VideoFrameScaler) scale frame");
 
             std::unique_ptr<VideoFrame> video_frame = std::move(queue_.front());
