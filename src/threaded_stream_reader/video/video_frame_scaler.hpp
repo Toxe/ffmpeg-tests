@@ -13,8 +13,8 @@
 struct AVCodecContext;
 struct SwsContext;
 
+class VideoContentProvider;
 class VideoFrame;
-struct VideoContentProvider;
 
 class VideoFrameScaler {
     std::mutex mtx_;
@@ -43,4 +43,5 @@ public:
     void stop();
 
     void add_to_queue(std::unique_ptr<VideoFrame> video_frame);
+    [[nodiscard]] std::unique_ptr<VideoFrame> remove_from_queue();
 };

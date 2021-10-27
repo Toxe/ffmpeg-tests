@@ -14,8 +14,8 @@ struct AVCodecContext;
 struct AVFormatContext;
 struct AVPacket;
 
+class VideoContentProvider;
 class VideoFrame;
-struct VideoContentProvider;
 
 class VideoReader {
     std::mutex mtx_;
@@ -49,7 +49,7 @@ public:
     void run(VideoContentProvider* video_content_provider, std::latch& latch);
     void stop();
 
-    void continue_reading();
-
     bool has_finished();
+
+    void continue_reading();
 };

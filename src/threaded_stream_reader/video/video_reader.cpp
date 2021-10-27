@@ -92,6 +92,17 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
     spdlog::debug("(VideoReader) stopping");
 }
 
+void VideoReader::continue_reading()
+{
+    cv_.notify_one();
+}
+
+bool VideoReader::has_finished()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    return has_started_ && has_finished_;
+}
+
 std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 {
     // read until we get at least one video frame
@@ -157,15 +168,4 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
     }
 
     return nullptr;
-}
-
-void VideoReader::continue_reading()
-{
-    cv_.notify_one();
-}
-
-bool VideoReader::has_finished()
-{
-    std::lock_guard<std::mutex> lock(mtx_);
-    return has_started_ && has_finished_;
 }

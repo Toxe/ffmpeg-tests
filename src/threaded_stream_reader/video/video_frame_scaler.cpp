@@ -66,11 +66,12 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         if (!st.stop_requested()) {
             spdlog::trace("(VideoFrameScaler) scale frame");
 
-            std::unique_ptr<VideoFrame> video_frame = std::move(queue_.front());
-            queue_.pop();
+            std::unique_ptr<VideoFrame> video_frame = remove_from_queue();
 
-            scale_frame(video_frame.get());
-            video_content_provider->add_finished_video_frame(std::move(video_frame));
+            if (video_frame) {
+                scale_frame(video_frame.get());
+                video_content_provider->add_finished_video_frame(std::move(video_frame));
+            }
         }
     }
 
@@ -85,6 +86,18 @@ void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)
     }
 
     cv_.notify_one();
+}
+
+std::unique_ptr<VideoFrame> VideoFrameScaler::remove_from_queue()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+
+    if (queue_.empty())
+        return nullptr;
+
+    std::unique_ptr<VideoFrame> video_frame = std::move(queue_.front());
+    queue_.pop();
+    return video_frame;
 }
 
 void VideoFrameScaler::scale_frame(VideoFrame* video_frame)

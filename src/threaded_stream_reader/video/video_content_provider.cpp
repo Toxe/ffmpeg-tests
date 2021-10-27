@@ -47,6 +47,11 @@ void VideoContentProvider::stop()
     }
 }
 
+bool VideoContentProvider::finished_video_frames_queue_is_full()
+{
+    return finished_video_frames_queue_.full();
+}
+
 void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFrame> video_frame)
 {
     video_frame_scaler_.add_to_queue(std::move(video_frame));
@@ -62,15 +67,10 @@ void VideoContentProvider::add_finished_video_frame(std::unique_ptr<VideoFrame> 
 
 std::tuple<std::unique_ptr<VideoFrame>, int> VideoContentProvider::next_frame(const double playback_position)
 {
-    std::unique_ptr<VideoFrame> video_frame = std::move(finished_video_frames_queue_.pop(playback_position));
+    std::unique_ptr<VideoFrame> video_frame = finished_video_frames_queue_.pop(playback_position);
 
     if (video_frame && !finished_video_frames_queue_.full())
         video_reader_.continue_reading();
 
     return std::make_tuple(std::move(video_frame), static_cast<int>(finished_video_frames_queue_.size()));
-}
-
-bool VideoContentProvider::finished_video_frames_queue_is_full()
-{
-    return finished_video_frames_queue_.full();
 }

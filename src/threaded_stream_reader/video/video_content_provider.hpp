@@ -27,12 +27,12 @@ public:
     void run();
     void stop();
 
+    bool has_finished() { return video_reader_.has_finished(); };
+
+    bool finished_video_frames_queue_is_full();
+
     void add_video_frame_for_scaling(std::unique_ptr<VideoFrame> video_frame);
     void add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame);
 
     [[nodiscard]] std::tuple<std::unique_ptr<VideoFrame>, int> next_frame(const double playback_position);
-
-    bool finished_video_frames_queue_is_full();
-
-    bool has_finished() { return video_reader_.has_finished(); };
 };
