@@ -37,7 +37,7 @@ void VideoFrameScaler::run(VideoContentProvider* video_content_provider, std::la
     if (!thread_.joinable()) {
         spdlog::debug("(VideoFrameScaler) run");
 
-        thread_ = std::jthread([&](std::stop_token st) { main(st, video_content_provider, latch); });
+        thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(st, video_content_provider, latch); });
     }
 }
 
