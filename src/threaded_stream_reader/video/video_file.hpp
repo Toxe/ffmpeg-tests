@@ -6,11 +6,13 @@
 #include <vector>
 
 extern "C" {
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
+#include <libavutil/avutil.h>
 }
 
 #include "auto_delete_ressource.hpp"
+
+struct AVCodecContext;
+struct AVFormatContext;
 
 class VideoFile {
     auto_delete_ressource<AVFormatContext> format_context_ = {nullptr, nullptr};

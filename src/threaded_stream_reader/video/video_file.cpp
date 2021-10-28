@@ -6,6 +6,11 @@
 
 #include <fmt/core.h>
 
+extern "C" {
+#include <libavcodec/avcodec.h>
+#include <libavformat/avformat.h>
+}
+
 #include "error/error.hpp"
 
 VideoFile::VideoFile(const std::string_view& full_filename)
