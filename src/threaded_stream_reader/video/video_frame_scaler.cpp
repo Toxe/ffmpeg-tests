@@ -12,7 +12,7 @@ extern "C" {
 
 #include "error/error.hpp"
 #include "video_content_provider.hpp"
-#include "video_frame.hpp"
+#include "video_frame/video_frame.hpp"
 
 VideoFrameScaler::VideoFrameScaler(StreamInfo* video_stream_info, const int width, const int height)
 {

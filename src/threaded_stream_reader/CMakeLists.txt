@@ -3,6 +3,9 @@ add_executable(threaded_stream_reader
     error/error.cpp
     error/error.hpp
     include/auto_delete_ressource.hpp
+    video/factory/factory.hpp
+    video/factory/ffmpeg_factory.hpp
+    video/factory/mock_factory.hpp
     video/stream_info/stream_info.cpp
     video/stream_info/stream_info.hpp
     video/video_content_provider.cpp
@@ -13,8 +16,12 @@ add_executable(threaded_stream_reader
     video/video_frame_queue.hpp
     video/video_frame_scaler.cpp
     video/video_frame_scaler.hpp
-    video/video_frame.cpp
-    video/video_frame.hpp
+    video/video_frame/ffmpeg_video_frame.cpp
+    video/video_frame/ffmpeg_video_frame.hpp
+    video/video_frame/mock_video_frame.cpp
+    video/video_frame/mock_video_frame.hpp
+    video/video_frame/video_frame.cpp
+    video/video_frame/video_frame.hpp
     video/video_reader.cpp
     video/video_reader.hpp
 )

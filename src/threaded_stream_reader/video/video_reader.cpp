@@ -12,11 +12,13 @@ extern "C" {
 }
 
 #include "error/error.hpp"
+#include "factory/factory.hpp"
 #include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
-#include "video_frame.hpp"
+#include "video_frame/video_frame.hpp"
 
-VideoReader::VideoReader(StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height)
+VideoReader::VideoReader(Factory* factory, StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height)
+    : factory_{factory}
 {
     audio_stream_info_ = audio_stream_info;
     video_stream_info_ = video_stream_info;
@@ -142,12 +144,10 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
 
     // get all available frames from the decoder
     while (ret >= 0) {
-        std::unique_ptr<VideoFrame> video_frame = std::make_unique<VideoFrame>(video_stream_info_->codec_context(), scale_width_, scale_height_);
+        std::unique_ptr<VideoFrame> video_frame = factory_->create_video_frame(scale_width_, scale_height_);
         ret = avcodec_receive_frame(video_stream_info_->codec_context(), video_frame->frame());
 
         if (ret < 0) {
-            // delete video_frame;
-
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
                 return nullptr;
 

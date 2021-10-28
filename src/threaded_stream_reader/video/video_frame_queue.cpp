@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "video_frame.hpp"
+#include "video_frame/video_frame.hpp"
 
 void VideoFrameQueue::push(std::unique_ptr<VideoFrame> frame)
 {

@@ -1,4 +1,4 @@
-#include "video_frame.hpp"
+#include "ffmpeg_video_frame.hpp"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -8,11 +8,8 @@ extern "C" {
 
 #include "error/error.hpp"
 
-VideoFrame::VideoFrame(AVCodecContext* codec_context, int width, int height)
+FFmpegVideoFrame::FFmpegVideoFrame(AVCodecContext* codec_context, const int width, const int height) : VideoFrame{width, height}
 {
-    width_ = width;
-    height_ = height;
-
     // allocate buffer for decoded source images
     int buf_size = av_image_alloc(img_buf_data_.data(), img_buf_linesize_.data(), codec_context->width, codec_context->height, codec_context->pix_fmt, 1);
 
@@ -31,19 +28,13 @@ VideoFrame::VideoFrame(AVCodecContext* codec_context, int width, int height)
         show_error("av_frame_alloc");
 }
 
-VideoFrame::~VideoFrame()
+FFmpegVideoFrame::~FFmpegVideoFrame()
 {
     av_freep(dst_buf_data_.data());
     av_freep(img_buf_data_.data());
 }
 
-void VideoFrame::update_timestamp(double time_base)
+void FFmpegVideoFrame::update_timestamp(double time_base)
 {
     timestamp_ = static_cast<double>(frame_->best_effort_timestamp) * time_base;
-}
-
-void VideoFrame::update_dimensions(const int width, const int height)
-{
-    width_ = width;
-    height_ = height;
 }

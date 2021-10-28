@@ -6,11 +6,13 @@
 #include <spdlog/spdlog.h>
 
 #include "error/error.hpp"
-#include "video_frame.hpp"
+#include "factory/factory.hpp"
+#include "video_frame/video_frame.hpp"
 
-VideoContentProvider::VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height)
-    : video_frame_scaler_{video_file.video_stream_info(), scale_width, scale_height},
-      video_reader_{video_file.audio_stream_info(), video_file.video_stream_info(), scale_width, scale_height}
+VideoContentProvider::VideoContentProvider(Factory* factory, VideoFile& video_file, const int scale_width, const int scale_height)
+    : factory_{factory},
+      video_frame_scaler_{video_file.video_stream_info(), scale_width, scale_height},
+      video_reader_{factory, video_file.audio_stream_info(), video_file.video_stream_info(), scale_width, scale_height}
 {
 }
 

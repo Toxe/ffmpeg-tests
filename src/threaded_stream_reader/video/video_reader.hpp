@@ -12,11 +12,14 @@
 
 struct AVPacket;
 
+class Factory;
 class StreamInfo;
 class VideoContentProvider;
 class VideoFrame;
 
 class VideoReader {
+    Factory* factory_;
+
     std::mutex mtx_;
     std::condition_variable_any cv_;
     std::jthread thread_;
@@ -38,7 +41,7 @@ class VideoReader {
     [[nodiscard]] std::unique_ptr<VideoFrame> decode_video_packet(const AVPacket* packet);
 
 public:
-    VideoReader(StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height);
+    VideoReader(Factory* factory, StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height);
     ~VideoReader();
 
     void run(VideoContentProvider* video_content_provider, std::latch& latch);

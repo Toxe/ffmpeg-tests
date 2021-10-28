@@ -8,9 +8,12 @@
 #include "video_frame_scaler.hpp"
 #include "video_reader.hpp"
 
+class Factory;
 class VideoFrame;
 
 class VideoContentProvider {
+    Factory* factory_;
+
     VideoFrameQueue finished_video_frames_queue_;
     VideoFrameScaler video_frame_scaler_;
     VideoReader video_reader_;
@@ -18,7 +21,7 @@ class VideoContentProvider {
     bool is_running_ = false;
 
 public:
-    VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height);
+    VideoContentProvider(Factory* factory, VideoFile& video_file, const int scale_width, const int scale_height);
     ~VideoContentProvider();
 
     void run();

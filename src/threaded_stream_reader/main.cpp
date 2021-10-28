@@ -1,6 +1,6 @@
 #include <chrono>
 #include <filesystem>
-#include <mutex>
+#include <memory>
 #include <string_view>
 #include <thread>
 
@@ -9,9 +9,10 @@
 #include <spdlog/spdlog.h>
 
 #include "error/error.hpp"
+#include "video/factory/ffmpeg_factory.hpp"
+#include "video/factory/mock_factory.hpp"
 #include "video/video_content_provider.hpp"
 #include "video/video_file.hpp"
-#include "video/video_frame.hpp"
 
 void do_something_with_the_frame(VideoFrame* frame)
 {
@@ -39,10 +40,12 @@ int main(int argc, char* argv[])
 
     std::string_view filename = eval_args(argc, argv);
 
+    const auto factory = std::make_unique<FFmpegFactory>();
+
     spdlog::debug("(main) starting VideoContentProvider...");
 
     VideoFile video_file(filename);
-    VideoContentProvider video_content_provider(video_file, 640, 480);
+    VideoContentProvider video_content_provider(factory.get(), video_file, 640, 480);
     video_content_provider.run();
 
     // begin playback
