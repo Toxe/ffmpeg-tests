@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../auto_delete_ressource.hpp"
+#include "auto_delete_ressource.hpp"
 
 struct AVCodecContext;
 struct AVFormatContext;
