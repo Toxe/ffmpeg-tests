@@ -14,14 +14,14 @@ extern "C" {
 #include "video_content_provider.hpp"
 #include "video_frame.hpp"
 
-VideoFrameScaler::VideoFrameScaler(AVCodecContext* video_codec_context, const int width, const int height)
+VideoFrameScaler::VideoFrameScaler(StreamInfo* video_stream_info, const int width, const int height)
 {
-    video_codec_context_ = video_codec_context;
+    video_stream_info_ = video_stream_info;
 
     scale_width_ = width;
     scale_height_ = height;
 
-    scaling_context_ = auto_delete_ressource<SwsContext>(sws_getContext(video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr), [](SwsContext* ctx) { sws_freeContext(ctx); });
+    scaling_context_ = auto_delete_ressource<SwsContext>(sws_getContext(video_stream_info_->codec_context()->width, video_stream_info_->codec_context()->height, video_stream_info_->codec_context()->pix_fmt, width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr), [](SwsContext* ctx) { sws_freeContext(ctx); });
 
     if (!scaling_context_)
         throw std::runtime_error("sws_getContext");
@@ -107,19 +107,19 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
     //     resize_scaling_context(video_frame->width_, video_frame->height_);
 
     if (scaling_context_)
-        sws_scale(scaling_context_.get(), video_frame->img_data(), video_frame->img_linesizes(), 0, video_codec_context_->height, video_frame->dst_data(), video_frame->dst_linesizes());
+        sws_scale(scaling_context_.get(), video_frame->img_data(), video_frame->img_linesizes(), 0, video_stream_info_->codec_context()->height, video_frame->dst_data(), video_frame->dst_linesizes());
 
     video_frame->update_dimensions(scale_width_, scale_height_);
 }
 
-int VideoFrameScaler::resize_scaling_context(AVCodecContext* video_codec_context, int width, int height)
+int VideoFrameScaler::resize_scaling_context(int width, int height)
 {
     spdlog::trace("(VideoFrameScaler) resize scaling context to {}x{}", width, height);
 
     scale_width_ = width;
     scale_height_ = height;
 
-    scaling_context_.reset(sws_getContext(video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
+    scaling_context_.reset(sws_getContext(video_stream_info_->codec_context()->width, video_stream_info_->codec_context()->height, video_stream_info_->codec_context()->pix_fmt, width, height, AV_PIX_FMT_RGBA, SWS_BILINEAR, nullptr, nullptr, nullptr));
 
     if (!scaling_context_)
         return show_error("sws_getContext");

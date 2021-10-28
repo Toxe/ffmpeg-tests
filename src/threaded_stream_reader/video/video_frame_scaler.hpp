@@ -10,9 +10,9 @@
 
 #include "auto_delete_ressource.hpp"
 
-struct AVCodecContext;
 struct SwsContext;
 
+class StreamInfo;
 class VideoContentProvider;
 class VideoFrame;
 
@@ -25,7 +25,7 @@ class VideoFrameScaler {
 
     auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
 
-    AVCodecContext* video_codec_context_ = nullptr;
+    StreamInfo* video_stream_info_;
 
     int scale_width_ = 0;
     int scale_height_ = 0;
@@ -33,10 +33,10 @@ class VideoFrameScaler {
     void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 
     void scale_frame(VideoFrame* video_frame);
-    int resize_scaling_context(AVCodecContext* video_codec_context, int width, int height);
+    int resize_scaling_context(int width, int height);
 
 public:
-    VideoFrameScaler(AVCodecContext* video_codec_context, const int width, const int height);
+    VideoFrameScaler(StreamInfo* video_stream_info, const int width, const int height);
     ~VideoFrameScaler();
 
     void run(VideoContentProvider* video_content_provider, std::latch& latch);

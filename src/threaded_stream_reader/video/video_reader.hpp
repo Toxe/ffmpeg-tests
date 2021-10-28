@@ -10,10 +10,9 @@
 
 #include "auto_delete_ressource.hpp"
 
-struct AVCodecContext;
-struct AVFormatContext;
 struct AVPacket;
 
+class StreamInfo;
 class VideoContentProvider;
 class VideoFrame;
 
@@ -24,12 +23,8 @@ class VideoReader {
 
     auto_delete_ressource<AVPacket> packet_ = {nullptr, nullptr};
 
-    AVFormatContext* format_context_ = nullptr;
-    AVCodecContext* video_codec_context_ = nullptr;
-    AVCodecContext* audio_codec_context_ = nullptr;
-
-    int video_stream_index_ = -1;
-    int audio_stream_index_ = -1;
+    StreamInfo* audio_stream_info_;
+    StreamInfo* video_stream_info_;
 
     int scale_width_ = 0;
     int scale_height_ = 0;
@@ -43,13 +38,13 @@ class VideoReader {
     [[nodiscard]] std::unique_ptr<VideoFrame> decode_video_packet(const AVPacket* packet);
 
 public:
-    VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height);
+    VideoReader(StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height);
     ~VideoReader();
 
     void run(VideoContentProvider* video_content_provider, std::latch& latch);
     void stop();
 
-    bool has_finished();
+    [[nodiscard]] bool has_finished();
 
     void continue_reading();
 };

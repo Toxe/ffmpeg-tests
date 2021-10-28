@@ -9,8 +9,8 @@
 #include "video_frame.hpp"
 
 VideoContentProvider::VideoContentProvider(VideoFile& video_file, const int scale_width, const int scale_height)
-    : video_frame_scaler_{video_file.video_codec_context(), scale_width, scale_height},
-      video_reader_{video_file.format_context(), video_file.video_codec_context(), video_file.audio_codec_context(), video_file.video_stream_index(), video_file.audio_stream_index(), scale_width, scale_height}
+    : video_frame_scaler_{video_file.video_stream_info(), scale_width, scale_height},
+      video_reader_{video_file.audio_stream_info(), video_file.video_stream_info(), scale_width, scale_height}
 {
 }
 

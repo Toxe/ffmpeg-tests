@@ -8,9 +8,6 @@
 #include "video_frame_scaler.hpp"
 #include "video_reader.hpp"
 
-struct AVCodecContext;
-struct AVFormatContext;
-
 class VideoFrame;
 
 class VideoContentProvider {

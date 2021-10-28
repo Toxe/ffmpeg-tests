@@ -12,16 +12,14 @@ extern "C" {
 }
 
 #include "error/error.hpp"
+#include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
 #include "video_frame.hpp"
 
-VideoReader::VideoReader(AVFormatContext* format_context, AVCodecContext* video_codec_context, AVCodecContext* audio_codec_context, int video_stream_index, int audio_stream_index, const int scale_width, const int scale_height)
+VideoReader::VideoReader(StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height)
 {
-    format_context_ = format_context;
-    video_codec_context_ = video_codec_context;
-    audio_codec_context_ = audio_codec_context;
-    video_stream_index_ = video_stream_index;
-    audio_stream_index_ = audio_stream_index;
+    audio_stream_info_ = audio_stream_info;
+    video_stream_info_ = video_stream_info;
 
     scale_width_ = scale_width;
     scale_height_ = scale_height;
@@ -107,17 +105,17 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 {
     // read until we get at least one video frame
     while (true) {
-        int ret = av_read_frame(format_context_, packet_.get());
+        int ret = av_read_frame(video_stream_info_->format_context(), packet_.get());
 
         if (ret < 0)
             return std::nullopt;
 
         // process only interesting packets, drop the rest
-        if (packet_->stream_index == video_stream_index_) {
+        if (packet_->stream_index == video_stream_info_->stream_index()) {
             std::unique_ptr<VideoFrame> video_frame = decode_video_packet(packet_.get());
             av_packet_unref(packet_.get());
             return video_frame;
-        } else if (packet_->stream_index == audio_stream_index_) {
+        } else if (packet_->stream_index == audio_stream_info_->stream_index()) {
             // TODO: decode audio packet
 
             av_packet_unref(packet_.get());
@@ -135,7 +133,7 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* packet)
 {
     // send packet to the decoder
-    int ret = avcodec_send_packet(video_codec_context_, packet);
+    int ret = avcodec_send_packet(video_stream_info_->codec_context(), packet);
 
     if (ret < 0) {
         show_error("avcodec_send_packet", ret);
@@ -144,10 +142,8 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
 
     // get all available frames from the decoder
     while (ret >= 0) {
-        const AVStream* stream = format_context_->streams[video_stream_index_];
-        std::unique_ptr<VideoFrame> video_frame = std::make_unique<VideoFrame>(video_codec_context_, scale_width_, scale_height_);
-
-        ret = avcodec_receive_frame(video_codec_context_, video_frame->frame());
+        std::unique_ptr<VideoFrame> video_frame = std::make_unique<VideoFrame>(video_stream_info_->codec_context(), scale_width_, scale_height_);
+        ret = avcodec_receive_frame(video_stream_info_->codec_context(), video_frame->frame());
 
         if (ret < 0) {
             // delete video_frame;
@@ -160,9 +156,9 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
         }
 
         // copy decoded frame to image buffer
-        av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->data), video_frame->frame()->linesize, video_codec_context_->pix_fmt, video_codec_context_->width, video_codec_context_->height);
+        av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->data), video_frame->frame()->linesize, video_stream_info_->codec_context()->pix_fmt, video_stream_info_->codec_context()->width, video_stream_info_->codec_context()->height);
 
-        video_frame->update_timestamp(av_q2d(stream->time_base));
+        video_frame->update_timestamp(video_stream_info_->time_base());
 
         return video_frame;
     }
