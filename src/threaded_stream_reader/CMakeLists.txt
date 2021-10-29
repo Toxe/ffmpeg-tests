@@ -8,6 +8,11 @@ add_executable(threaded_stream_reader
     video/adapters/codec_context/ffmpeg_codec_context.hpp
     video/adapters/codec_context/mock_codec_context.cpp
     video/adapters/codec_context/mock_codec_context.hpp
+    video/adapters/video_library/ffmpeg_video_library.cpp
+    video/adapters/video_library/ffmpeg_video_library.hpp
+    video/adapters/video_library/mock_video_library.cpp
+    video/adapters/video_library/mock_video_library.hpp
+    video/adapters/video_library/video_library.hpp
     video/factory/factory.hpp
     video/factory/ffmpeg_factory.cpp
     video/factory/ffmpeg_factory.hpp
