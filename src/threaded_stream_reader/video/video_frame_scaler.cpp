@@ -11,6 +11,7 @@ extern "C" {
 }
 
 #include "error/error.hpp"
+#include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
 #include "video_frame/video_frame.hpp"
 

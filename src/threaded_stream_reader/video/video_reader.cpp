@@ -11,6 +11,7 @@ extern "C" {
 #include <libavutil/imgutils.h>
 }
 
+#include "adapters/format_context/format_context.hpp"
 #include "error/error.hpp"
 #include "factory/factory.hpp"
 #include "stream_info/stream_info.hpp"
@@ -107,7 +108,7 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 {
     // read until we get at least one video frame
     while (true) {
-        int ret = av_read_frame(video_stream_info_->format_context(), packet_.get());
+        int ret = av_read_frame(video_stream_info_->format_context()->context(), packet_.get());
 
         if (ret < 0)
             return std::nullopt;
