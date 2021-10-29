@@ -12,10 +12,8 @@ extern "C" {
 #include <libavutil/avutil.h>
 }
 
-#include "adapters/format_context/format_context.hpp"
 #include "error/error.hpp"
 #include "factory/factory.hpp"
-#include "stream_info/stream_info.hpp"
 
 VideoFile::VideoFile(const std::string_view& full_filename, Factory* factory)
     : factory_{factory}
