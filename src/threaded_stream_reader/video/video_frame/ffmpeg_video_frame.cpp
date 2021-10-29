@@ -6,12 +6,13 @@ extern "C" {
 #include <libavutil/imgutils.h>
 }
 
+#include "../adapters/codec_context/codec_context.hpp"
 #include "error/error.hpp"
 
-FFmpegVideoFrame::FFmpegVideoFrame(AVCodecContext* codec_context, const int width, const int height) : VideoFrame{width, height}
+FFmpegVideoFrame::FFmpegVideoFrame(CodecContext* codec_context, const int width, const int height) : VideoFrame{width, height}
 {
     // allocate buffer for decoded source images
-    int buf_size = av_image_alloc(img_buf_data_.data(), img_buf_linesize_.data(), codec_context->width, codec_context->height, codec_context->pix_fmt, 1);
+    int buf_size = av_image_alloc(img_buf_data_.data(), img_buf_linesize_.data(), codec_context->width(), codec_context->height(), codec_context->pixel_format(), 1);
 
     if (buf_size < 0)
         show_error("av_image_alloc", buf_size);

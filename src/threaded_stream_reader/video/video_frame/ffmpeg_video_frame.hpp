@@ -5,6 +5,8 @@
 #include "auto_delete_ressource.hpp"
 #include "video_frame.hpp"
 
+class CodecContext;
+
 class FFmpegVideoFrame : public VideoFrame {
     auto_delete_ressource<AVFrame> frame_ = {nullptr, nullptr};
 
@@ -14,7 +16,7 @@ class FFmpegVideoFrame : public VideoFrame {
     std::array<int, 4> dst_buf_linesize_ = {0};
 
 public:
-    FFmpegVideoFrame(AVCodecContext* codec_context, const int width, const int height);
+    FFmpegVideoFrame(CodecContext* codec_context, const int width, const int height);
     ~FFmpegVideoFrame() override;
 
     void update_timestamp(double time_base) override;

@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-struct AVCodecContext;
 struct AVFrame;
 
 class VideoFrame {

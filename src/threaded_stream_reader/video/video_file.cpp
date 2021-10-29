@@ -13,8 +13,10 @@ extern "C" {
 }
 
 #include "error/error.hpp"
+#include "factory/factory.hpp"
 
-VideoFile::VideoFile(const std::string_view& full_filename)
+VideoFile::VideoFile(const std::string_view& full_filename, Factory* factory)
+    : factory_{factory}
 {
     is_open_ = open_file(full_filename) == 0;
 }
@@ -31,39 +33,12 @@ std::unique_ptr<StreamInfo> VideoFile::find_best_stream(AVFormatContext* format_
 
     // find decoder for stream
     AVStream* stream = format_context->streams[stream_index];
-    AVCodec* decoder = avcodec_find_decoder(stream->codecpar->codec_id);
-
-    if (!decoder) {
-        show_error(fmt::format("avcodec_find_decoder [{}]", av_get_media_type_string(media_type)));
-        return nullptr;
-    }
 
     // allocate codec context for decoder
-    auto_delete_ressource<AVCodecContext> codec_context(avcodec_alloc_context3(decoder), [](AVCodecContext* dec_ctx) { avcodec_free_context(&dec_ctx); });
+    std::unique_ptr<CodecContext> codec_context = factory_->create_codec_context(stream);
 
-    if (!codec_context) {
-        show_error(fmt::format("avcodec_alloc_context3 [{}]", av_get_media_type_string(media_type)));
+    if (!codec_context)
         return nullptr;
-    }
-
-    // copy codec parameters from input stream to codec context
-    int ret = avcodec_parameters_to_context(codec_context.get(), stream->codecpar);
-
-    if (ret < 0) {
-        show_error(fmt::format("avcodec_parameters_to_context [{}]", av_get_media_type_string(media_type)), ret);
-        return nullptr;
-    }
-
-    codec_context->thread_count = 0;
-    codec_context->thread_type = FF_THREAD_FRAME;
-
-    // init decoder
-    ret = avcodec_open2(codec_context.get(), decoder, nullptr);
-
-    if (ret < 0) {
-        show_error(fmt::format("avcodec_open2 [{}]", av_get_media_type_string(media_type)), ret);
-        return nullptr;
-    }
 
     return std::make_unique<StreamInfo>(format_context, std::move(codec_context), stream_index);
 }

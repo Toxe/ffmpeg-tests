@@ -13,6 +13,7 @@
 #include "video/factory/mock_factory.hpp"
 #include "video/video_content_provider.hpp"
 #include "video/video_file.hpp"
+#include "video/video_frame/video_frame.hpp"
 
 void do_something_with_the_frame(VideoFrame* frame)
 {
@@ -44,7 +45,7 @@ int main(int argc, char* argv[])
 
     spdlog::debug("(main) starting VideoContentProvider...");
 
-    VideoFile video_file(filename);
+    VideoFile video_file(filename, factory.get());
     VideoContentProvider video_content_provider(factory.get(), video_file, 640, 480);
     video_content_provider.run();
 

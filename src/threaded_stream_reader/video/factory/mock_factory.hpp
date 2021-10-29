@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../video_frame/mock_video_frame.hpp"
 #include "factory.hpp"
 
 class MockFactory : public Factory {
 public:
-    [[nodiscard]] std::unique_ptr<VideoFrame> create_video_frame(const int width, const int height) override { return std::make_unique<MockVideoFrame>(width, height); };
+    [[nodiscard]] std::unique_ptr<CodecContext> create_codec_context(AVStream* stream) override;
+    [[nodiscard]] std::unique_ptr<VideoFrame> create_video_frame(CodecContext* codec_context, const int width, const int height) override;
 };

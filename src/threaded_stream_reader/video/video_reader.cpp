@@ -135,7 +135,8 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* packet)
 {
     // send packet to the decoder
-    int ret = avcodec_send_packet(video_stream_info_->codec_context(), packet);
+    int ret = avcodec_send_packet(nullptr, packet);  // TODO
+    // int ret = avcodec_send_packet(video_stream_info_->codec_context(), packet);
 
     if (ret < 0) {
         show_error("avcodec_send_packet", ret);
@@ -144,8 +145,9 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
 
     // get all available frames from the decoder
     while (ret >= 0) {
-        std::unique_ptr<VideoFrame> video_frame = factory_->create_video_frame(scale_width_, scale_height_);
-        ret = avcodec_receive_frame(video_stream_info_->codec_context(), video_frame->frame());
+        std::unique_ptr<VideoFrame> video_frame = factory_->create_video_frame(video_stream_info_->codec_context(), scale_width_, scale_height_);
+        ret = avcodec_receive_frame(nullptr, video_frame->frame());  // TODO
+        // ret = avcodec_receive_frame(video_stream_info_->codec_context(), video_frame->frame());
 
         if (ret < 0) {
             if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
@@ -156,7 +158,7 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* pac
         }
 
         // copy decoded frame to image buffer
-        av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->data), video_frame->frame()->linesize, video_stream_info_->codec_context()->pix_fmt, video_stream_info_->codec_context()->width, video_stream_info_->codec_context()->height);
+        av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->data), video_frame->frame()->linesize, video_stream_info_->codec_context()->pixel_format(), video_stream_info_->codec_context()->width(), video_stream_info_->codec_context()->height());
 
         video_frame->update_timestamp(video_stream_info_->time_base());
 

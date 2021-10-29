@@ -5,7 +5,7 @@ extern "C" {
 #include <libavutil/rational.h>
 }
 
-StreamInfo::StreamInfo(AVFormatContext* format_context, auto_delete_ressource<AVCodecContext> codec_context, int stream_index)
+StreamInfo::StreamInfo(AVFormatContext* format_context, std::unique_ptr<CodecContext> codec_context, int stream_index)
     : format_context_{format_context}, codec_context_{std::move(codec_context)}, stream_index_{stream_index}
 {
 }
