@@ -4,3 +4,8 @@ AVFormatContext* MockFormatContext::context()
 {
     return nullptr;
 }
+
+int MockFormatContext::read_frame(AVPacket*)
+{
+    return 0;
+}

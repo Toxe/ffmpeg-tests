@@ -12,4 +12,5 @@ public:
     FFmpegFormatContext(const std::string_view& filename);
 
     [[nodiscard]] AVFormatContext* context() override;
+    [[nodiscard]] virtual int read_frame(AVPacket* packet) override;
 };

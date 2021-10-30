@@ -6,6 +6,8 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
+#include "../../../error/error.hpp"
+
 FFmpegFormatContext::FFmpegFormatContext(const std::string_view& filename)
 {
     // allocate format context
@@ -32,4 +34,14 @@ FFmpegFormatContext::FFmpegFormatContext(const std::string_view& filename)
 AVFormatContext* FFmpegFormatContext::context()
 {
     return format_context_.get();
+}
+
+int FFmpegFormatContext::read_frame(AVPacket* packet)
+{
+    int ret = av_read_frame(format_context_.get(), packet);
+
+    if (ret < 0)
+        return show_error("av_read_frame", ret);
+
+    return 0;
 }
