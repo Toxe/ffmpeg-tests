@@ -9,11 +9,6 @@
 class Factory;
 
 class VideoFile {
-    enum class StreamType {
-        audio,
-        video
-    };
-
     Factory* factory_;
 
     std::unique_ptr<FormatContext> format_context_;
@@ -21,8 +16,6 @@ class VideoFile {
     std::unique_ptr<StreamInfo> video_stream_info_;
 
     bool is_open_ = false;
-
-    [[nodiscard]] std::unique_ptr<StreamInfo> find_best_stream(FormatContext* format_context, const StreamType type);
 
     int open_file(const std::string_view& full_filename);
 

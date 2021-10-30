@@ -13,7 +13,6 @@
 #include "video/factory/mock_factory.hpp"
 #include "video/video_content_provider.hpp"
 #include "video/video_file.hpp"
-#include "video/video_frame/video_frame.hpp"
 
 void do_something_with_the_frame(VideoFrame* frame)
 {
@@ -42,6 +41,7 @@ int main(int argc, char* argv[])
     std::string_view filename = eval_args(argc, argv);
 
     const auto factory = std::make_unique<FFmpegFactory>();
+    const auto video_library = factory->create_video_library();
 
     spdlog::debug("(main) starting VideoContentProvider...");
 

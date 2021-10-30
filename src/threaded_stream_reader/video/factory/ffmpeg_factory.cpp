@@ -10,9 +10,9 @@ std::unique_ptr<CodecContext> FFmpegFactory::create_codec_context(AVStream* stre
     return std::make_unique<FFmpegCodecContext>(stream);
 }
 
-std::unique_ptr<FormatContext> FFmpegFactory::create_format_context()
+std::unique_ptr<FormatContext> FFmpegFactory::create_format_context(const std::string_view& filename)
 {
-    return std::make_unique<FFmpegFormatContext>();
+    return std::make_unique<FFmpegFormatContext>(filename);
 }
 
 std::unique_ptr<VideoFrame> FFmpegFactory::create_video_frame(CodecContext* codec_context, const int width, const int height)

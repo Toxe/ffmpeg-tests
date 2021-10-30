@@ -6,13 +6,27 @@ extern "C" {
 #include <libavformat/avformat.h>
 }
 
-FFmpegFormatContext::FFmpegFormatContext()
+FFmpegFormatContext::FFmpegFormatContext(const std::string_view& filename)
 {
     // allocate format context
     format_context_ = auto_delete_ressource<AVFormatContext>(avformat_alloc_context(), [](AVFormatContext* ctx) { avformat_close_input(&ctx); });
 
     if (!format_context_)
         throw std::runtime_error("avformat_alloc_context");
+
+    // open input file
+    auto p_ctx = format_context_.get();
+
+    int ret = avformat_open_input(&p_ctx, filename.data(), nullptr, nullptr);
+
+    if (ret < 0)
+        throw std::runtime_error("avformat_open_input");
+
+    // load stream info
+    ret = avformat_find_stream_info(format_context_.get(), nullptr);
+
+    if (ret < 0)
+        throw std::runtime_error("avformat_find_stream_info");
 }
 
 AVFormatContext* FFmpegFormatContext::context()

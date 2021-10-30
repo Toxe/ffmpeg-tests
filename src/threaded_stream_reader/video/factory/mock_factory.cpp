@@ -10,7 +10,7 @@ std::unique_ptr<CodecContext> MockFactory::create_codec_context(AVStream*)
     return std::make_unique<MockCodecContext>();
 }
 
-std::unique_ptr<FormatContext> MockFactory::create_format_context()
+std::unique_ptr<FormatContext> MockFactory::create_format_context(const std::string_view&)
 {
     return std::make_unique<MockFormatContext>();
 }
