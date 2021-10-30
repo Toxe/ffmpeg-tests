@@ -2,9 +2,6 @@
 
 #include <stdexcept>
 
-#include <fmt/ostream.h>
-#include <spdlog/spdlog.h>
-
 extern "C" {
 #include <libavcodec/packet.h>
 }
@@ -12,6 +9,7 @@ extern "C" {
 #include "adapters/format_context/format_context.hpp"
 #include "error/error.hpp"
 #include "factory/factory.hpp"
+#include "logger/logger.hpp"
 #include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
 #include "video_frame/video_frame.hpp"
@@ -39,7 +37,7 @@ VideoReader::~VideoReader()
 void VideoReader::run(VideoContentProvider* video_content_provider, std::latch& latch)
 {
     if (!thread_.joinable()) {
-        spdlog::debug("(VideoReader) run");
+        log_debug("(VideoReader) run");
 
         thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(st, video_content_provider, latch); });
     }
@@ -48,7 +46,7 @@ void VideoReader::run(VideoContentProvider* video_content_provider, std::latch& 
 void VideoReader::stop()
 {
     if (thread_.joinable()) {
-        spdlog::debug("(VideoReader) stop");
+        log_debug("(VideoReader) stop");
 
         thread_.request_stop();
         thread_.join();
@@ -57,7 +55,7 @@ void VideoReader::stop()
 
 void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)
 {
-    spdlog::debug("(VideoReader) starting");
+    log_debug("(VideoReader) starting");
 
     latch.arrive_and_wait();
 
@@ -88,7 +86,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
         has_finished_ = true;
     }
 
-    spdlog::debug("(VideoReader) stopping");
+    log_debug("(VideoReader) stopping");
 }
 
 void VideoReader::continue_reading()

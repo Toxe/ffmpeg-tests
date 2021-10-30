@@ -5,10 +5,9 @@
 #include <thread>
 
 #include <fmt/core.h>
-#include <fmt/ostream.h>
-#include <spdlog/spdlog.h>
 
 #include "error/error.hpp"
+#include "logger/logger.hpp"
 #include "video/factory/ffmpeg_factory.hpp"
 #include "video/factory/mock_factory.hpp"
 #include "video/video_content_provider.hpp"
@@ -36,14 +35,14 @@ void do_something_with_the_frame(VideoFrame* frame)
 
 int main(int argc, char* argv[])
 {
-    spdlog::set_level(spdlog::level::trace);
+    log_init();
 
     std::string_view filename = eval_args(argc, argv);
 
     const auto factory = std::make_unique<FFmpegFactory>();
     const auto video_library = factory->create_video_library();
 
-    spdlog::debug("(main) starting VideoContentProvider...");
+    log_debug("(main) starting VideoContentProvider...");
 
     VideoFile video_file(filename, factory.get());
     VideoContentProvider video_content_provider(factory.get(), video_file, 640, 480);
@@ -53,7 +52,7 @@ int main(int argc, char* argv[])
     auto playback_begin = std::chrono::steady_clock::now();
     bool received_first_real_frame = false;
 
-    spdlog::debug("(main) main loop...");
+    log_debug("(main) main loop...");
 
     while (true) {
         // do some work
@@ -71,10 +70,10 @@ int main(int argc, char* argv[])
         const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
         if (video_frame) {
-            spdlog::trace("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), video_frame->timestamp(), frames_available, ms.count());
+            log_trace(fmt::format("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), video_frame->timestamp(), frames_available, ms.count()));
 
             if (!received_first_real_frame) {
-                spdlog::debug("(main) received first frame, begin playback");
+                log_debug("(main) received first frame, begin playback");
                 received_first_real_frame = true;
             }
 
@@ -85,9 +84,9 @@ int main(int argc, char* argv[])
             break;
     }
 
-    spdlog::debug("(main) playback stopped");
+    log_debug("(main) playback stopped");
 
     video_content_provider.stop();
 
-    spdlog::debug("(main) quit");
+    log_debug("(main) quit");
 }

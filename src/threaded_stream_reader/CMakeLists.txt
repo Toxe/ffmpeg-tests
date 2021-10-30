@@ -3,14 +3,16 @@ add_executable(threaded_stream_reader
     error/error.cpp
     error/error.hpp
     include/auto_delete_ressource.hpp
+    logger/logger.cpp
+    logger/logger.hpp
     video/adapters/codec_context/codec_context.hpp
     video/adapters/codec_context/ffmpeg_codec_context.cpp
     video/adapters/codec_context/ffmpeg_codec_context.hpp
     video/adapters/codec_context/mock_codec_context.cpp
     video/adapters/codec_context/mock_codec_context.hpp
-    video/adapters/format_context/format_context.hpp
     video/adapters/format_context/ffmpeg_format_context.cpp
     video/adapters/format_context/ffmpeg_format_context.hpp
+    video/adapters/format_context/format_context.hpp
     video/adapters/format_context/mock_format_context.cpp
     video/adapters/format_context/mock_format_context.hpp
     video/adapters/video_library/ffmpeg_video_library.cpp

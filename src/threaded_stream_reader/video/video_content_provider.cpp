@@ -2,11 +2,11 @@
 
 #include <latch>
 
-#include <fmt/ostream.h>
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 #include "error/error.hpp"
 #include "factory/factory.hpp"
+#include "logger/logger.hpp"
 #include "video_frame/video_frame.hpp"
 
 VideoContentProvider::VideoContentProvider(Factory* factory, VideoFile& video_file, const int scale_width, const int scale_height)
@@ -24,7 +24,7 @@ VideoContentProvider::~VideoContentProvider()
 void VideoContentProvider::run()
 {
     if (!is_running_) {
-        spdlog::debug("(VideoContentProvider) run");
+        log_debug("(VideoContentProvider) run");
 
         std::latch latch{3};
 
@@ -40,7 +40,7 @@ void VideoContentProvider::run()
 void VideoContentProvider::stop()
 {
     if (is_running_) {
-        spdlog::debug("(VideoContentProvider) stop");
+        log_debug("(VideoContentProvider) stop");
 
         video_reader_.stop();
         video_frame_scaler_.stop();
@@ -61,8 +61,7 @@ void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFram
 
 void VideoContentProvider::add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame)
 {
-    spdlog::trace("(VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)",
-        video_frame->width(), video_frame->height(), video_frame->timestamp(), finished_video_frames_queue_.size() + 1);
+    log_trace(fmt::format("(VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)", video_frame->width(), video_frame->height(), video_frame->timestamp(), finished_video_frames_queue_.size() + 1));
 
     finished_video_frames_queue_.push(std::move(video_frame));
 }

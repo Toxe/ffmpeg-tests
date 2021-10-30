@@ -2,26 +2,28 @@
 
 #include <cstdlib>
 
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 extern "C" {
 #include <libavutil/error.h>
 }
 
-int show_error(const std::string_view& error_message, std::optional<int> error_code)
+#include "logger/logger.hpp"
+
+int show_error(const std::string& error_message, std::optional<int> error_code)
 {
     if (error_code.has_value()) {
         char buf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(error_code.value(), buf, AV_ERROR_MAX_STRING_SIZE);
-        spdlog::error("{} ({})", error_message, buf);
+        log_error(fmt::format("{} ({})", error_message, buf));
         return error_code.value();
     } else {
-        spdlog::error(error_message);
+        log_error(error_message);
         return -1;
     }
 }
 
-[[noreturn]] void die(const std::string_view& error_message)
+[[noreturn]] void die(const std::string& error_message)
 {
     show_error(error_message);
     std::exit(2);

@@ -2,8 +2,7 @@
 
 #include <stdexcept>
 
-#include <fmt/ostream.h>
-#include <spdlog/spdlog.h>
+#include <fmt/core.h>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -11,6 +10,7 @@ extern "C" {
 }
 
 #include "error/error.hpp"
+#include "logger/logger.hpp"
 #include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
 #include "video_frame/video_frame.hpp"
@@ -36,7 +36,7 @@ VideoFrameScaler::~VideoFrameScaler()
 void VideoFrameScaler::run(VideoContentProvider* video_content_provider, std::latch& latch)
 {
     if (!thread_.joinable()) {
-        spdlog::debug("(VideoFrameScaler) run");
+        log_debug("(VideoFrameScaler) run");
 
         thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(st, video_content_provider, latch); });
     }
@@ -45,7 +45,7 @@ void VideoFrameScaler::run(VideoContentProvider* video_content_provider, std::la
 void VideoFrameScaler::stop()
 {
     if (thread_.joinable()) {
-        spdlog::debug("(VideoFrameScaler) stop");
+        log_debug("(VideoFrameScaler) stop");
 
         thread_.request_stop();
         thread_.join();
@@ -54,7 +54,7 @@ void VideoFrameScaler::stop()
 
 void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)
 {
-    spdlog::debug("(VideoFrameScaler) starting");
+    log_debug("(VideoFrameScaler) starting");
 
     latch.arrive_and_wait();
 
@@ -65,7 +65,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
 
         if (!st.stop_requested()) {
-            spdlog::trace("(VideoFrameScaler) scale frame");
+            log_trace("(VideoFrameScaler) scale frame");
 
             std::unique_ptr<VideoFrame> video_frame = remove_from_queue();
 
@@ -76,7 +76,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
     }
 
-    spdlog::debug("(VideoFrameScaler) stopping");
+    log_debug("(VideoFrameScaler) stopping");
 }
 
 void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)
@@ -115,7 +115,7 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
 
 int VideoFrameScaler::resize_scaling_context(int width, int height)
 {
-    spdlog::trace("(VideoFrameScaler) resize scaling context to {}x{}", width, height);
+    log_trace(fmt::format("(VideoFrameScaler) resize scaling context to {}x{}", width, height));
 
     scale_width_ = width;
     scale_height_ = height;
