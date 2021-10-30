@@ -16,6 +16,7 @@ include(cmake/StaticAnalyzers.cmake)
 include(cmake/Sanitizers.cmake)
 
 find_package(fmt CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 find_package(FFMPEG REQUIRED)
 
 add_subdirectory(src/file_info)
