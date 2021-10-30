@@ -1,12 +1,7 @@
 #include "video_reader.hpp"
 
-#include <stdexcept>
-
-extern "C" {
-#include <libavcodec/packet.h>
-}
-
 #include "adapters/format_context/format_context.hpp"
+#include "adapters/packet/packet.hpp"
 #include "error/error.hpp"
 #include "factory/factory.hpp"
 #include "logger/logger.hpp"
@@ -23,10 +18,7 @@ VideoReader::VideoReader(Factory* factory, StreamInfo* audio_stream_info, Stream
     scale_width_ = scale_width;
     scale_height_ = scale_height;
 
-    packet_ = auto_delete_ressource<AVPacket>(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
-
-    if (!packet_)
-        throw std::runtime_error("av_packet_alloc");
+    packet_ = factory_->create_packet();
 }
 
 VideoReader::~VideoReader()
@@ -110,16 +102,15 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
             return std::nullopt;
 
         // process only interesting packets, drop the rest
-        if (packet_->stream_index == video_stream_info_->stream_index()) {
+        if (packet_->stream_index() == video_stream_info_->stream_index()) {
             std::unique_ptr<VideoFrame> video_frame = decode_video_packet(packet_.get());
-            av_packet_unref(packet_.get());
+            packet_->unref();
             return video_frame;
-        } else if (packet_->stream_index == audio_stream_info_->stream_index()) {
+        } else if (packet_->stream_index() == audio_stream_info_->stream_index()) {
             // TODO: decode audio packet
-
-            av_packet_unref(packet_.get());
+            packet_->unref();
         } else {
-            av_packet_unref(packet_.get());
+            packet_->unref();
         }
 
         if (ret < 0)
@@ -129,7 +120,7 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
     return std::nullopt;
 }
 
-std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(const AVPacket* packet)
+std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(Packet* packet)
 {
     // send packet to the decoder
     int ret = video_stream_info_->codec_context()->send_packet(packet);

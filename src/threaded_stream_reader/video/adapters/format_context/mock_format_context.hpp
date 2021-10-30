@@ -5,5 +5,5 @@
 class MockFormatContext : public FormatContext {
 public:
     [[nodiscard]] AVFormatContext* context() override;
-    [[nodiscard]] virtual int read_frame(AVPacket* packet) override;
+    [[nodiscard]] virtual int read_frame(Packet* packet) override;
 };

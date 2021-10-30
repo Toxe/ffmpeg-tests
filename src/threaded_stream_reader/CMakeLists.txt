@@ -15,6 +15,11 @@ add_executable(threaded_stream_reader
     video/adapters/format_context/format_context.hpp
     video/adapters/format_context/mock_format_context.cpp
     video/adapters/format_context/mock_format_context.hpp
+    video/adapters/packet/ffmpeg_packet.cpp
+    video/adapters/packet/ffmpeg_packet.hpp
+    video/adapters/packet/mock_packet.cpp
+    video/adapters/packet/mock_packet.hpp
+    video/adapters/packet/packet.hpp
     video/adapters/video_library/ffmpeg_video_library.cpp
     video/adapters/video_library/ffmpeg_video_library.hpp
     video/adapters/video_library/mock_video_library.cpp

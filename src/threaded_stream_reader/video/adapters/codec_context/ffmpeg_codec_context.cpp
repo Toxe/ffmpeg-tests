@@ -11,6 +11,7 @@ extern "C" {
 
 #include "../../../error/error.hpp"
 #include "../../video_frame/video_frame.hpp"
+#include "../packet/packet.hpp"
 
 FFmpegCodecContext::FFmpegCodecContext(AVStream* stream)
 {
@@ -55,9 +56,9 @@ AVPixelFormat FFmpegCodecContext::pixel_format()
     return codec_context_->pix_fmt;
 }
 
-int FFmpegCodecContext::send_packet(const AVPacket* packet)
+int FFmpegCodecContext::send_packet(Packet* packet)
 {
-    int ret = avcodec_send_packet(codec_context_.get(), packet);
+    int ret = avcodec_send_packet(codec_context_.get(), packet->packet());
 
     if (ret < 0)
         return show_error("avcodec_send_packet", ret);
