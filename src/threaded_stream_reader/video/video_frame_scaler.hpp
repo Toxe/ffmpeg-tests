@@ -8,22 +8,22 @@
 #include <stop_token>
 #include <thread>
 
-#include "auto_delete_ressource.hpp"
-
-struct SwsContext;
-
+class Factory;
+class ScalingContext;
 class StreamInfo;
 class VideoContentProvider;
 class VideoFrame;
 
 class VideoFrameScaler {
+    Factory* factory_;
+
     std::mutex mtx_;
     std::condition_variable_any cv_;
     std::jthread thread_;
 
     std::queue<std::unique_ptr<VideoFrame>> queue_;
 
-    auto_delete_ressource<SwsContext> scaling_context_ = {nullptr, nullptr};
+    std::unique_ptr<ScalingContext> scaling_context_;
 
     StreamInfo* video_stream_info_;
 
@@ -36,7 +36,7 @@ class VideoFrameScaler {
     int resize_scaling_context(int width, int height);
 
 public:
-    VideoFrameScaler(StreamInfo* video_stream_info, const int width, const int height);
+    VideoFrameScaler(Factory* factory, StreamInfo* video_stream_info, const int width, const int height);
     ~VideoFrameScaler();
 
     void run(VideoContentProvider* video_content_provider, std::latch& latch);

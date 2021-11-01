@@ -20,6 +20,11 @@ add_executable(threaded_stream_reader
     video/adapters/packet/mock_packet.cpp
     video/adapters/packet/mock_packet.hpp
     video/adapters/packet/packet.hpp
+    video/adapters/scaling_context/ffmpeg_scaling_context.cpp
+    video/adapters/scaling_context/ffmpeg_scaling_context.hpp
+    video/adapters/scaling_context/mock_scaling_context.cpp
+    video/adapters/scaling_context/mock_scaling_context.hpp
+    video/adapters/scaling_context/scaling_context.hpp
     video/adapters/video_library/ffmpeg_video_library.cpp
     video/adapters/video_library/ffmpeg_video_library.hpp
     video/adapters/video_library/mock_video_library.cpp
