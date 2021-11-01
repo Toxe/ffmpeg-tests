@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
         const auto ms = std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1);
 
         if (video_frame) {
-            log_trace(fmt::format("(main) playback_position={:.4f}, found frame, timestamp={:.4f} ({} more frames available), waited for {}us", playback_position.count(), video_frame->timestamp(), frames_available, ms.count()));
+            log_trace(fmt::format("(main) playback_position={:.4f}, found frame: {} ({} more frames available), waited for {}us", playback_position.count(), video_frame->print(), frames_available, ms.count()));
 
             if (!received_first_real_frame) {
                 log_debug("(main) received first frame, begin playback");

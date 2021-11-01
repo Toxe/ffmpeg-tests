@@ -63,7 +63,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
 
         if (!st.stop_requested()) {
-            log_trace("(VideoFrameScaler) scale frame");
+            log_trace("(VideoFrameScaler) scale next frame");
 
             std::unique_ptr<VideoFrame> video_frame = remove_from_queue();
 
@@ -105,8 +105,11 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
     // if (scale_width_ != video_frame->width_ || scale_height_ != video_frame->height_)
     //     resize_scaling_context(video_frame->width_, video_frame->height_);
 
-    if (scaling_context_)
+    if (scaling_context_) {
+        log_trace(fmt::format("(VideoFrameScaler) scale frame: {}", video_frame->print()));
+
         scaling_context_->scale(video_frame);
+    }
 }
 
 int VideoFrameScaler::resize_scaling_context(int width, int height)

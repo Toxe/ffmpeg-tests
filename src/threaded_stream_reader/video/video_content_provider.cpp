@@ -61,7 +61,7 @@ void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFram
 
 void VideoContentProvider::add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame)
 {
-    log_trace(fmt::format("(VideoContentProvider) new video frame, {}x{}, timestamp={:.4f} ({} frames now available)", video_frame->width(), video_frame->height(), video_frame->timestamp(), finished_video_frames_queue_.size() + 1));
+    log_trace(fmt::format("(VideoContentProvider) new video frame: {} ({} frames now available)", video_frame->print(), finished_video_frames_queue_.size() + 1));
 
     finished_video_frames_queue_.push(std::move(video_frame));
 }

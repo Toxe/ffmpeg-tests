@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 struct AVFrame;
 
@@ -10,9 +11,13 @@ protected:
     int height_ = 0;
     double timestamp_ = 0.0;
 
+    virtual const char* class_name() = 0;
+
 public:
     VideoFrame(const int width, const int height);
     virtual ~VideoFrame();
+
+    [[nodiscard]] std::string print();
 
     virtual void update_timestamp(double time_base) = 0;
     virtual void update_dimensions(const int width, const int height);

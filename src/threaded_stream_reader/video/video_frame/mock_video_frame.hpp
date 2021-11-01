@@ -5,6 +5,9 @@
 #include "video_frame.hpp"
 
 class MockVideoFrame : public VideoFrame {
+protected:
+    const char* class_name() override { return "MockVideoFrame"; };
+
 public:
     MockVideoFrame(const int width, const int height);
 
