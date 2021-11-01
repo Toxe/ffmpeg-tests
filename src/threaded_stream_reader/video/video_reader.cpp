@@ -130,7 +130,7 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(Packet* packet)
 
     // get all available frames from the decoder
     while (ret >= 0) {
-        std::unique_ptr<VideoFrame> video_frame = factory_->create_video_frame(video_stream_info_->codec_context(), scale_width_, scale_height_);
+        std::unique_ptr<VideoFrame> video_frame = factory_->create_video_frame(factory_, video_stream_info_->codec_context(), scale_width_, scale_height_);
         ret = video_stream_info_->codec_context()->receive_frame(video_frame.get());
 
         if (ret < 0)

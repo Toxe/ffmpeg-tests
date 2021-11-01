@@ -1,11 +1,16 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 #include <string>
 
-struct AVFrame;
+#include "../adapters/frame/frame.hpp"
+
+class Factory;
 
 class VideoFrame {
+    std::unique_ptr<Frame> frame_;
+
 protected:
     int width_ = 0;
     int height_ = 0;
@@ -14,8 +19,8 @@ protected:
     virtual const char* class_name() = 0;
 
 public:
-    VideoFrame(const int width, const int height);
-    virtual ~VideoFrame();
+    VideoFrame(Factory* factory, const int width, const int height);
+    virtual ~VideoFrame() { }
 
     [[nodiscard]] std::string print();
 
@@ -26,9 +31,9 @@ public:
     [[nodiscard]] virtual int width() const { return width_; };
     [[nodiscard]] virtual int height() const { return height_; };
 
-    [[nodiscard]] virtual const uint8_t* pixels() const = 0;
+    [[nodiscard]] virtual Frame* frame() { return frame_.get(); }
 
-    [[nodiscard]] virtual AVFrame* frame() = 0;
+    [[nodiscard]] virtual const uint8_t* pixels() const = 0;
 
     [[nodiscard]] virtual uint8_t** img_data() = 0;
     [[nodiscard]] virtual uint8_t** dst_data() = 0;

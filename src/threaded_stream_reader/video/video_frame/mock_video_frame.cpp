@@ -1,6 +1,7 @@
 #include "mock_video_frame.hpp"
 
-MockVideoFrame::MockVideoFrame(const int width, const int height) : VideoFrame{width, height}
+MockVideoFrame::MockVideoFrame(Factory* factory, const int width, const int height)
+    : VideoFrame{factory, width, height}
 {
 }
 

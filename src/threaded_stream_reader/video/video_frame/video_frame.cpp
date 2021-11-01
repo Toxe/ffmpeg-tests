@@ -2,14 +2,14 @@
 
 #include <fmt/core.h>
 
-VideoFrame::VideoFrame(const int width, const int height)
+#include "../factory/factory.hpp"
+
+VideoFrame::VideoFrame(Factory* factory, const int width, const int height)
 {
     width_ = width;
     height_ = height;
-}
 
-VideoFrame::~VideoFrame()
-{
+    frame_ = factory->create_frame();
 }
 
 void VideoFrame::update_dimensions(const int width, const int height)

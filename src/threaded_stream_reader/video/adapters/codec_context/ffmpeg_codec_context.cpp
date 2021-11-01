@@ -11,6 +11,7 @@ extern "C" {
 
 #include "../../../error/error.hpp"
 #include "../../video_frame/video_frame.hpp"
+#include "../frame/frame.hpp"
 #include "../packet/packet.hpp"
 
 FFmpegCodecContext::FFmpegCodecContext(AVStream* stream)
@@ -68,7 +69,7 @@ int FFmpegCodecContext::send_packet(Packet* packet)
 
 int FFmpegCodecContext::receive_frame(VideoFrame* video_frame)
 {
-    int ret = avcodec_receive_frame(codec_context_.get(), video_frame->frame());
+    int ret = avcodec_receive_frame(codec_context_.get(), video_frame->frame()->frame());
 
     if (ret < 0) {
         if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
@@ -82,6 +83,6 @@ int FFmpegCodecContext::receive_frame(VideoFrame* video_frame)
 
 void FFmpegCodecContext::image_copy(VideoFrame* video_frame)
 {
-    av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->data), video_frame->frame()->linesize,
+    av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->frame()->data), video_frame->frame()->frame()->linesize,
         codec_context_->pix_fmt, codec_context_->width, codec_context_->height);
 }
