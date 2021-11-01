@@ -39,10 +39,5 @@ AVFormatContext* FFmpegFormatContext::context()
 
 int FFmpegFormatContext::read_frame(Packet* packet)
 {
-    int ret = av_read_frame(format_context_.get(), packet->packet());
-
-    if (ret < 0)
-        return show_error("av_read_frame", ret);
-
-    return 0;
+    return av_read_frame(format_context_.get(), packet->packet());
 }
