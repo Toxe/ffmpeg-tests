@@ -1,10 +1,5 @@
 #include "stream_info.hpp"
 
-extern "C" {
-#include <libavformat/avformat.h>
-#include <libavutil/rational.h>
-}
-
 #include "../adapters/format_context/format_context.hpp"
 
 StreamInfo::StreamInfo(FormatContext* format_context, std::unique_ptr<CodecContext> codec_context, int stream_index)
@@ -14,6 +9,5 @@ StreamInfo::StreamInfo(FormatContext* format_context, std::unique_ptr<CodecConte
 
 double StreamInfo::time_base() const
 {
-    const AVStream* stream = format_context_->context()->streams[stream_index_];
-    return av_q2d(stream->time_base);
+    return format_context_->stream_time_base(stream_index_);
 }

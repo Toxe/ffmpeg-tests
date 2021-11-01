@@ -4,6 +4,7 @@
 
 extern "C" {
 #include <libavformat/avformat.h>
+#include <libavutil/rational.h>
 }
 
 #include "../../../error/error.hpp"
@@ -35,6 +36,12 @@ FFmpegFormatContext::FFmpegFormatContext(const std::string_view& filename)
 AVFormatContext* FFmpegFormatContext::context()
 {
     return format_context_.get();
+}
+
+double FFmpegFormatContext::stream_time_base(const int stream_index)
+{
+    const AVStream* stream = format_context_->streams[stream_index];
+    return av_q2d(stream->time_base);
 }
 
 int FFmpegFormatContext::read_frame(Packet* packet)
