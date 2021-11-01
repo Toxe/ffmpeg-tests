@@ -7,7 +7,12 @@ AVPacket* MockPacket::packet()
 
 int MockPacket::stream_index()
 {
-    return 0;
+    return stream_index_;
+}
+
+void MockPacket::set_stream_index(const int new_stream_index)
+{
+    stream_index_ = new_stream_index;
 }
 
 void MockPacket::unref()

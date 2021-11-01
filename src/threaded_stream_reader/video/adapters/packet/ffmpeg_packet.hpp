@@ -10,7 +10,8 @@ class FFmpegPacket : public Packet {
 public:
     FFmpegPacket();
 
-    [[nodiscard]] virtual AVPacket* packet() override;
     [[nodiscard]] virtual int stream_index() override;
+
+    [[nodiscard]] virtual AVPacket* packet() override;
     virtual void unref() override;
 };
