@@ -4,7 +4,9 @@
 
 #include "../adapters/codec_context/codec_context.hpp"
 
+class Factory;
 class FormatContext;
+class VideoFrame;
 
 class StreamInfo {
     FormatContext* format_context_ = nullptr;
@@ -19,4 +21,6 @@ public:
     [[nodiscard]] int stream_index() const { return stream_index_; }
 
     [[nodiscard]] double time_base() const;
+
+    [[nodiscard]] std::unique_ptr<VideoFrame> receive_video_frame(Factory* factory, const int width, const int height);
 };

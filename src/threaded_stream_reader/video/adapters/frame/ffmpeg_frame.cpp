@@ -14,7 +14,12 @@ FFmpegFrame::FFmpegFrame()
         throw std::runtime_error("av_frame_alloc");
 }
 
-AVFrame* FFmpegFrame::frame()
+const uint8_t** FFmpegFrame::data()
 {
-    return frame_.get();
+    return const_cast<const uint8_t**>(frame_->data);
+}
+
+const int* FFmpegFrame::linesize()
+{
+    return frame_->linesize;
 }

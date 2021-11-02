@@ -7,6 +7,7 @@
 #include "../adapters/frame/frame.hpp"
 
 class Factory;
+class StreamInfo;
 
 class VideoFrame {
     std::unique_ptr<Frame> frame_;
@@ -14,22 +15,20 @@ class VideoFrame {
 protected:
     int width_ = 0;
     int height_ = 0;
-    double timestamp_ = 0.0;
 
     virtual const char* class_name() = 0;
 
 public:
-    VideoFrame(Factory* factory, const int width, const int height);
+    VideoFrame(std::unique_ptr<Frame> frame, const int width, const int height);
     virtual ~VideoFrame() { }
 
     [[nodiscard]] std::string print();
 
-    virtual void update_timestamp(double time_base) = 0;
-    virtual void update_dimensions(const int width, const int height);
+    [[nodiscard]] int width() const { return width_; };
+    [[nodiscard]] int height() const { return height_; };
+    [[nodiscard]] double timestamp() const { return frame_->timestamp(); };
 
-    [[nodiscard]] virtual double timestamp() const { return timestamp_; };
-    [[nodiscard]] virtual int width() const { return width_; };
-    [[nodiscard]] virtual int height() const { return height_; };
+    void update_dimensions(const int width, const int height);
 
     [[nodiscard]] virtual Frame* frame() { return frame_.get(); }
 

@@ -1,6 +1,11 @@
 #include "mock_frame.hpp"
 
-AVFrame* MockFrame::frame()
+const uint8_t** MockFrame::data()
+{
+    return nullptr;
+}
+
+const int* MockFrame::linesize()
 {
     return nullptr;
 }

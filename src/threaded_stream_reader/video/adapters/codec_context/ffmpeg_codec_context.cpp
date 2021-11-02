@@ -10,6 +10,7 @@ extern "C" {
 }
 
 #include "../../../error/error.hpp"
+#include "../../factory/factory.hpp"
 #include "../../video_frame/video_frame.hpp"
 #include "../frame/frame.hpp"
 #include "../packet/packet.hpp"
@@ -67,22 +68,26 @@ int FFmpegCodecContext::send_packet(Packet* packet)
     return 0;
 }
 
-int FFmpegCodecContext::receive_frame(VideoFrame* video_frame)
+std::unique_ptr<Frame> FFmpegCodecContext::receive_frame(Factory* factory, const double time_base)
 {
-    int ret = avcodec_receive_frame(codec_context_.get(), video_frame->frame()->frame());
+    std::unique_ptr<Frame> frame = factory->create_frame();
+
+    int ret = avcodec_receive_frame(codec_context_.get(), frame->frame());
 
     if (ret < 0) {
-        if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
-            return ret;
+        if (!(ret == AVERROR_EOF || ret == AVERROR(EAGAIN)))
+            show_error("avcodec_receive_frame");
 
-        return show_error("avcodec_receive_frame", ret);
+        return nullptr;
     }
 
-    return 0;
+    frame->set_timestamp(static_cast<double>(frame->frame()->best_effort_timestamp) * time_base);
+
+    return frame;
 }
 
 void FFmpegCodecContext::image_copy(VideoFrame* video_frame)
 {
-    av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), const_cast<const uint8_t**>(video_frame->frame()->frame()->data), video_frame->frame()->frame()->linesize,
+    av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), video_frame->frame()->data(), video_frame->frame()->linesize(),
         codec_context_->pix_fmt, codec_context_->width, codec_context_->height);
 }

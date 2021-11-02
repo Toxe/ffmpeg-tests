@@ -23,9 +23,9 @@ std::unique_ptr<ScalingContext> FFmpegFactory::create_scaling_context(CodecConte
     return std::make_unique<FFmpegScalingContext>(codec_context, width, height);
 }
 
-std::unique_ptr<VideoFrame> FFmpegFactory::create_video_frame(Factory* factory, CodecContext* codec_context, const int width, const int height)
+std::unique_ptr<VideoFrame> FFmpegFactory::create_video_frame(std::unique_ptr<Frame> frame, CodecContext* codec_context, const int width, const int height)
 {
-    return std::make_unique<FFmpegVideoFrame>(factory, codec_context, width, height);
+    return std::make_unique<FFmpegVideoFrame>(std::move(frame), codec_context, width, height);
 }
 
 std::unique_ptr<VideoLibrary> FFmpegFactory::create_video_library()

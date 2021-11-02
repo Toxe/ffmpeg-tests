@@ -23,9 +23,9 @@ std::unique_ptr<ScalingContext> MockFactory::create_scaling_context(CodecContext
     return std::make_unique<MockScalingContext>(codec_context, width, height);
 }
 
-std::unique_ptr<VideoFrame> MockFactory::create_video_frame(Factory* factory, CodecContext*, const int width, const int height)
+std::unique_ptr<VideoFrame> MockFactory::create_video_frame(std::unique_ptr<Frame> frame, CodecContext* codec_context, const int width, const int height)
 {
-    return std::make_unique<MockVideoFrame>(factory, width, height);
+    return std::make_unique<MockVideoFrame>(std::move(frame), codec_context, width, height);
 }
 
 std::unique_ptr<VideoLibrary> MockFactory::create_video_library()

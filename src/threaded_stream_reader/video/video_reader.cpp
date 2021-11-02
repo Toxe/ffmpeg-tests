@@ -123,25 +123,17 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(Packet* packet)
 {
     // send packet to the decoder
-    int ret = video_stream_info_->codec_context()->send_packet(packet);
-
-    if (ret < 0)
+    if (video_stream_info_->codec_context()->send_packet(packet) < 0)
         return nullptr;
 
-    // get all available frames from the decoder
-    while (ret >= 0) {
-        std::unique_ptr<VideoFrame> video_frame = factory_->create_video_frame(factory_, video_stream_info_->codec_context(), scale_width_, scale_height_);
-        ret = video_stream_info_->codec_context()->receive_frame(video_frame.get());
+    // get available frame from the decoder
+    std::unique_ptr<VideoFrame> video_frame = video_stream_info_->receive_video_frame(factory_, scale_width_, scale_height_);
 
-        if (ret < 0)
-            return nullptr;
+    if (!video_frame)
+        return nullptr;
 
-        // copy decoded frame to image buffer
-        video_stream_info_->codec_context()->image_copy(video_frame.get());
-        video_frame->update_timestamp(video_stream_info_->time_base());
+    // copy decoded frame to image buffer
+    video_stream_info_->codec_context()->image_copy(video_frame.get());
 
-        return video_frame;
-    }
-
-    return nullptr;
+    return video_frame;
 }

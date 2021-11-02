@@ -21,6 +21,6 @@ int MockFormatContext::read_frame(Packet* packet)
 
 double MockFormatContext::stream_time_base(const int stream_index)
 {
-    return stream_index == 0 ? 1.0 / 90000.0
+    return stream_index == 0 ? 1.0 / 60.0
                              : 1.0 / 48000.0;
 }

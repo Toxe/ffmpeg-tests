@@ -1,6 +1,8 @@
 #include "stream_info.hpp"
 
 #include "../adapters/format_context/format_context.hpp"
+#include "../factory/factory.hpp"
+#include "../video_frame/video_frame.hpp"
 
 StreamInfo::StreamInfo(FormatContext* format_context, std::unique_ptr<CodecContext> codec_context, int stream_index)
     : format_context_{format_context}, codec_context_{std::move(codec_context)}, stream_index_{stream_index}
@@ -10,4 +12,14 @@ StreamInfo::StreamInfo(FormatContext* format_context, std::unique_ptr<CodecConte
 double StreamInfo::time_base() const
 {
     return format_context_->stream_time_base(stream_index_);
+}
+
+std::unique_ptr<VideoFrame> StreamInfo::receive_video_frame(Factory* factory, const int width, const int height)
+{
+    std::unique_ptr<Frame> frame = codec_context_->receive_frame(factory, time_base());
+
+    if (!frame)
+        return nullptr;
+
+    return factory->create_video_frame(std::move(frame), codec_context_.get(), width, height);
 }
