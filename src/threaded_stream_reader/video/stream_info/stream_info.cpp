@@ -14,12 +14,15 @@ double StreamInfo::time_base() const
     return format_context_->stream_time_base(stream_index_);
 }
 
-std::unique_ptr<VideoFrame> StreamInfo::receive_video_frame(Factory* factory, const int width, const int height)
+std::unique_ptr<VideoFrame> StreamInfo::receive_video_frame(Factory* factory, const int scaled_width, const int scaled_height)
 {
-    std::unique_ptr<Frame> frame = codec_context_->receive_frame(factory, time_base());
+    std::unique_ptr<Frame> frame = codec_context_->receive_frame(factory, time_base(), scaled_width, scaled_height);
 
     if (!frame)
         return nullptr;
 
-    return factory->create_video_frame(std::move(frame), codec_context_.get(), width, height);
+    // copy decoded frame to image buffer
+    frame->image_copy();
+
+    return std::make_unique<VideoFrame>(std::move(frame));
 }

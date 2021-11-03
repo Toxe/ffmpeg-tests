@@ -6,7 +6,6 @@
 #include "../adapters/packet/ffmpeg_packet.hpp"
 #include "../adapters/scaling_context/ffmpeg_scaling_context.hpp"
 #include "../adapters/video_library/ffmpeg_video_library.hpp"
-#include "../video_frame/ffmpeg_video_frame.hpp"
 
 std::unique_ptr<CodecContext> FFmpegFactory::create_codec_context(AVStream* stream)
 {
@@ -23,19 +22,14 @@ std::unique_ptr<ScalingContext> FFmpegFactory::create_scaling_context(CodecConte
     return std::make_unique<FFmpegScalingContext>(codec_context, width, height);
 }
 
-std::unique_ptr<VideoFrame> FFmpegFactory::create_video_frame(std::unique_ptr<Frame> frame, CodecContext* codec_context, const int width, const int height)
-{
-    return std::make_unique<FFmpegVideoFrame>(std::move(frame), codec_context, width, height);
-}
-
 std::unique_ptr<VideoLibrary> FFmpegFactory::create_video_library()
 {
     return std::make_unique<FFmpegVideoLibrary>();
 }
 
-std::unique_ptr<Frame> FFmpegFactory::create_frame()
+std::unique_ptr<Frame> FFmpegFactory::create_frame(CodecContext* codec_context, const int scaled_width, const int scaled_height)
 {
-    return std::make_unique<FFmpegFrame>();
+    return std::make_unique<FFmpegFrame>(codec_context, scaled_width, scaled_height);
 }
 
 std::unique_ptr<Packet> FFmpegFactory::create_packet()

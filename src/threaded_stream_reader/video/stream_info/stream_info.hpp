@@ -22,5 +22,5 @@ public:
 
     [[nodiscard]] double time_base() const;
 
-    [[nodiscard]] std::unique_ptr<VideoFrame> receive_video_frame(Factory* factory, const int width, const int height);
+    [[nodiscard]] std::unique_ptr<VideoFrame> receive_video_frame(Factory* factory, const int scaled_width, const int scaled_height);
 };

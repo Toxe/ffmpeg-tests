@@ -51,10 +51,6 @@ add_executable(threaded_stream_reader
     video/video_frame_queue.hpp
     video/video_frame_scaler.cpp
     video/video_frame_scaler.hpp
-    video/video_frame/ffmpeg_video_frame.cpp
-    video/video_frame/ffmpeg_video_frame.hpp
-    video/video_frame/mock_video_frame.cpp
-    video/video_frame/mock_video_frame.hpp
     video/video_frame/video_frame.cpp
     video/video_frame/video_frame.hpp
     video/video_reader.cpp

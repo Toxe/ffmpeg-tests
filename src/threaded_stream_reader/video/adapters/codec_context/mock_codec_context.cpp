@@ -26,14 +26,10 @@ int MockCodecContext::send_packet(Packet*)
     return 0;
 }
 
-std::unique_ptr<Frame> MockCodecContext::receive_frame(Factory* factory, const double time_base)
+std::unique_ptr<Frame> MockCodecContext::receive_frame(Factory* factory, const double time_base, const int scaled_width, const int scaled_height)
 {
-    std::unique_ptr<Frame> frame = factory->create_frame();
+    std::unique_ptr<Frame> frame = factory->create_frame(this, scaled_width, scaled_height);
     frame->set_timestamp(static_cast<double>(next_frame_number_++) * time_base);
 
     return frame;
-}
-
-void MockCodecContext::image_copy(VideoFrame*)
-{
 }

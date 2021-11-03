@@ -21,12 +21,10 @@ FFmpegScalingContext::FFmpegScalingContext(CodecContext* codec_context, const in
 
 int FFmpegScalingContext::scale(VideoFrame* video_frame)
 {
-    int ret = sws_scale(scaling_context_.get(), video_frame->img_data(), video_frame->img_linesizes(), 0, src_height_, video_frame->dst_data(), video_frame->dst_linesizes());
+    int ret = sws_scale(scaling_context_.get(), video_frame->frame()->src_data(), video_frame->frame()->src_linesizes(), 0, src_height_, video_frame->frame()->dst_data(), video_frame->frame()->dst_linesizes());
 
     if (ret != dst_height_)
         show_error("sws_scale");
-
-    video_frame->update_dimensions(dst_width_, dst_height_);
 
     return ret;
 }

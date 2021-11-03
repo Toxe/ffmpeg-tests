@@ -9,9 +9,7 @@ MockScalingContext::MockScalingContext(CodecContext* codec_context, const int wi
 {
 }
 
-int MockScalingContext::scale(VideoFrame* video_frame)
+int MockScalingContext::scale(VideoFrame*)
 {
-    video_frame->update_dimensions(dst_width_, dst_height_);
-
     return 0;
 }

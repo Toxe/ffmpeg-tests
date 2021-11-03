@@ -6,12 +6,10 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avutil.h>
-#include <libavutil/imgutils.h>
 }
 
 #include "../../../error/error.hpp"
 #include "../../factory/factory.hpp"
-#include "../../video_frame/video_frame.hpp"
 #include "../frame/frame.hpp"
 #include "../packet/packet.hpp"
 
@@ -68,9 +66,9 @@ int FFmpegCodecContext::send_packet(Packet* packet)
     return 0;
 }
 
-std::unique_ptr<Frame> FFmpegCodecContext::receive_frame(Factory* factory, const double time_base)
+std::unique_ptr<Frame> FFmpegCodecContext::receive_frame(Factory* factory, const double time_base, const int scaled_width, const int scaled_height)
 {
-    std::unique_ptr<Frame> frame = factory->create_frame();
+    std::unique_ptr<Frame> frame = factory->create_frame(this, scaled_width, scaled_height);
 
     int ret = avcodec_receive_frame(codec_context_.get(), frame->frame());
 
@@ -84,10 +82,4 @@ std::unique_ptr<Frame> FFmpegCodecContext::receive_frame(Factory* factory, const
     frame->set_timestamp(static_cast<double>(frame->frame()->best_effort_timestamp) * time_base);
 
     return frame;
-}
-
-void FFmpegCodecContext::image_copy(VideoFrame* video_frame)
-{
-    av_image_copy(video_frame->img_data(), video_frame->img_linesizes(), video_frame->frame()->data(), video_frame->frame()->linesize(),
-        codec_context_->pix_fmt, codec_context_->width, codec_context_->height);
 }

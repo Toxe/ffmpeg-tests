@@ -12,13 +12,14 @@
 #include "video/factory/mock_factory.hpp"
 #include "video/video_content_provider.hpp"
 #include "video/video_file.hpp"
+#include "video/video_frame/video_frame.hpp"
 
-void do_something_with_the_frame(VideoFrame* frame)
+void do_something_with_the_frame(VideoFrame* video_frame)
 {
-    const auto pixels = frame->pixels();
+    const auto pixels = video_frame->frame()->pixels();
     uint8_t pixel = 0;
 
-    for (int i = 0; i < frame->width() * frame->height() * 4; ++i)
+    for (int i = 0; i < video_frame->width() * video_frame->height() * 4; ++i)
         pixel ^= pixels[i];
 }
 
@@ -40,6 +41,7 @@ int main(int argc, char* argv[])
     std::string_view filename = eval_args(argc, argv);
 
     const auto factory = std::make_unique<FFmpegFactory>();
+    // const auto factory = std::make_unique<MockFactory>();
     const auto video_library = factory->create_video_library();
 
     log_debug("(main) starting VideoContentProvider...");

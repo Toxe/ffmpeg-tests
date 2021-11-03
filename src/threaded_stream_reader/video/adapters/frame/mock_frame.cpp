@@ -1,11 +1,10 @@
 #include "mock_frame.hpp"
 
-const uint8_t** MockFrame::data()
+MockFrame::MockFrame(CodecContext* codec_context, const int scaled_width, const int scaled_height)
+    : Frame(codec_context, scaled_width, scaled_height)
 {
-    return nullptr;
 }
 
-const int* MockFrame::linesize()
+void MockFrame::image_copy()
 {
-    return nullptr;
 }

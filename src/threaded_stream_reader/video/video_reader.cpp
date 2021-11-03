@@ -127,13 +127,5 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(Packet* packet)
         return nullptr;
 
     // get available frame from the decoder
-    std::unique_ptr<VideoFrame> video_frame = video_stream_info_->receive_video_frame(factory_, scale_width_, scale_height_);
-
-    if (!video_frame)
-        return nullptr;
-
-    // copy decoded frame to image buffer
-    video_stream_info_->codec_context()->image_copy(video_frame.get());
-
-    return video_frame;
+    return video_stream_info_->receive_video_frame(factory_, scale_width_, scale_height_);
 }
