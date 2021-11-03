@@ -1,5 +1,7 @@
 #include "audio_writer.hpp"
 
+#include <stdexcept>
+
 #include <fmt/core.h>
 
 AudioWriter::AudioWriter(const char* filename)
