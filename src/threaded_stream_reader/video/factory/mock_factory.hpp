@@ -8,8 +8,6 @@ public:
     [[nodiscard]] std::unique_ptr<FormatContext> create_format_context(const std::string_view& filename) override;
     [[nodiscard]] std::unique_ptr<ScalingContext> create_scaling_context(CodecContext* codec_context, const int width, const int height) override;
 
-    [[nodiscard]] std::unique_ptr<VideoLibrary> create_video_library() override;
-
     [[nodiscard]] std::unique_ptr<Frame> create_frame(CodecContext* codec_context, const int scaled_width, const int scaled_height) override;
     [[nodiscard]] std::unique_ptr<Packet> create_packet() override;
 };

@@ -41,7 +41,6 @@ int main(int argc, char* argv[])
 
     const auto factory = std::make_unique<FFmpegFactory>();
     // const auto factory = std::make_unique<MockFactory>();
-    const auto video_library = factory->create_video_library();
 
     log_debug("(main) starting VideoContentProvider...");
 

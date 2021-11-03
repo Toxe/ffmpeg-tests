@@ -11,8 +11,8 @@ class MockFormatContext : public FormatContext {
     std::array<int, 2> num_packets_ = {0};
 
 public:
-    [[nodiscard]] AVFormatContext* context() override;
-    [[nodiscard]] double stream_time_base(const int stream_index) override;
+    [[nodiscard]] double stream_time_base(const int stream_index) const override;
 
+    [[nodiscard]] virtual std::unique_ptr<StreamInfo> find_best_stream(Factory* factory, const StreamType type) override;
     [[nodiscard]] virtual int read_frame(Packet* packet) override;
 };

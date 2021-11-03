@@ -5,7 +5,6 @@
 #include "../adapters/frame/ffmpeg_frame.hpp"
 #include "../adapters/packet/ffmpeg_packet.hpp"
 #include "../adapters/scaling_context/ffmpeg_scaling_context.hpp"
-#include "../adapters/video_library/ffmpeg_video_library.hpp"
 
 std::unique_ptr<CodecContext> FFmpegFactory::create_codec_context(AVStream* stream)
 {
@@ -20,11 +19,6 @@ std::unique_ptr<FormatContext> FFmpegFactory::create_format_context(const std::s
 std::unique_ptr<ScalingContext> FFmpegFactory::create_scaling_context(CodecContext* codec_context, const int width, const int height)
 {
     return std::make_unique<FFmpegScalingContext>(codec_context, width, height);
-}
-
-std::unique_ptr<VideoLibrary> FFmpegFactory::create_video_library()
-{
-    return std::make_unique<FFmpegVideoLibrary>();
 }
 
 std::unique_ptr<Frame> FFmpegFactory::create_frame(CodecContext* codec_context, const int scaled_width, const int scaled_height)

@@ -2,7 +2,6 @@
 
 #include <filesystem>
 
-#include "adapters/video_library/video_library.hpp"
 #include "error/error.hpp"
 #include "factory/factory.hpp"
 
@@ -19,8 +18,6 @@ int VideoFile::open_file(const std::string_view& full_filename)
     if (!std::filesystem::exists(path))
         return show_error("file not found");
 
-    const auto video_library = factory_->create_video_library();
-
     // allocate format context
     format_context_ = factory_->create_format_context(full_filename);
 
@@ -28,8 +25,8 @@ int VideoFile::open_file(const std::string_view& full_filename)
         return -1;
 
     // find best audio and video stream
-    audio_stream_info_ = video_library->find_best_stream(factory_, format_context_.get(), VideoLibrary::StreamType::audio);
-    video_stream_info_ = video_library->find_best_stream(factory_, format_context_.get(), VideoLibrary::StreamType::video);
+    audio_stream_info_ = format_context_->find_best_stream(factory_, FormatContext::StreamType::audio);
+    video_stream_info_ = format_context_->find_best_stream(factory_, FormatContext::StreamType::video);
 
     if (!audio_stream_info_ || !video_stream_info_)
         return show_error("unable to find streams");

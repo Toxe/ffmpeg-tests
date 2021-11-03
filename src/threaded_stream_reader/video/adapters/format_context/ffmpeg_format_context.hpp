@@ -11,8 +11,8 @@ class FFmpegFormatContext : public FormatContext {
 public:
     FFmpegFormatContext(const std::string_view& filename);
 
-    [[nodiscard]] AVFormatContext* context() override;
-    [[nodiscard]] double stream_time_base(const int stream_index) override;
+    [[nodiscard]] double stream_time_base(const int stream_index) const override;
 
+    [[nodiscard]] virtual std::unique_ptr<StreamInfo> find_best_stream(Factory* factory, const StreamType type) override;
     [[nodiscard]] virtual int read_frame(Packet* packet) override;
 };

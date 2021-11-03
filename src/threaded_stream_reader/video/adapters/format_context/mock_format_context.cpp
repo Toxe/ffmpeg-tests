@@ -1,10 +1,23 @@
 #include "mock_format_context.hpp"
 
+#include "../../factory/factory.hpp"
+#include "../codec_context/codec_context.hpp"
 #include "../packet/packet.hpp"
+#include "error/error.hpp"
 
-AVFormatContext* MockFormatContext::context()
+double MockFormatContext::stream_time_base(const int stream_index) const
 {
-    return nullptr;
+    return stream_index == 0 ? 1.0 / 60.0
+                             : 1.0 / 48000.0;
+}
+
+std::unique_ptr<StreamInfo> MockFormatContext::find_best_stream(Factory* factory, const StreamType type)
+{
+    const int stream_index = type == StreamType::video ? 0 : 1;
+
+    std::unique_ptr<CodecContext> codec_context = factory->create_codec_context(nullptr);
+
+    return std::make_unique<StreamInfo>(this, std::move(codec_context), stream_index);
 }
 
 int MockFormatContext::read_frame(Packet* packet)
@@ -17,10 +30,4 @@ int MockFormatContext::read_frame(Packet* packet)
     read_stream_index_ = read_stream_index_ == 0 ? 1 : 0;
 
     return 0;
-}
-
-double MockFormatContext::stream_time_base(const int stream_index)
-{
-    return stream_index == 0 ? 1.0 / 60.0
-                             : 1.0 / 48000.0;
 }
