@@ -13,7 +13,7 @@ public:
     [[nodiscard]] virtual int* src_linesizes() override { return nullptr; }
     [[nodiscard]] virtual int* dst_linesizes() override { return nullptr; }
 
-    [[nodiscard]] const uint8_t* pixels() const override { return nullptr; }
+    [[nodiscard]] std::span<const uint8_t> pixels() override;
 
     virtual void image_copy() override;
 };

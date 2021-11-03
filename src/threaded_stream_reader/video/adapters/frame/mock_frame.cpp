@@ -5,6 +5,11 @@ MockFrame::MockFrame(CodecContext* codec_context, const int scaled_width, const 
 {
 }
 
+std::span<const uint8_t> MockFrame::pixels()
+{
+    return std::span<const uint8_t>{};
+}
+
 void MockFrame::image_copy()
 {
 }

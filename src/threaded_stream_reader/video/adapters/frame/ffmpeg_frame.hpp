@@ -33,7 +33,7 @@ public:
     [[nodiscard]] virtual int* src_linesizes() override { return img_buf_linesize_.data(); }
     [[nodiscard]] virtual int* dst_linesizes() override { return dst_buf_linesize_.data(); }
 
-    [[nodiscard]] const uint8_t* pixels() const override { return dst_buf_data_[0]; };
+    [[nodiscard]] std::span<const uint8_t> pixels() override;
 
     virtual void image_copy() override;
 };

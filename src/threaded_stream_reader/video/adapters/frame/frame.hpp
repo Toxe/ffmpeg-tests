@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <span>
 
 struct AVFrame;
 
@@ -31,7 +32,7 @@ public:
     [[nodiscard]] virtual int* src_linesizes() = 0;
     [[nodiscard]] virtual int* dst_linesizes() = 0;
 
-    [[nodiscard]] virtual const uint8_t* pixels() const = 0;
+    [[nodiscard]] virtual std::span<const uint8_t> pixels() = 0;
 
     virtual void image_copy() = 0;
 };

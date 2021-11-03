@@ -16,11 +16,10 @@
 
 void do_something_with_the_frame(VideoFrame* video_frame)
 {
-    const auto pixels = video_frame->frame()->pixels();
     uint8_t pixel = 0;
 
-    for (int i = 0; i < video_frame->width() * video_frame->height() * 4; ++i)
-        pixel ^= pixels[i];
+    for (const auto& p : video_frame->frame()->pixels())
+        pixel ^= p;
 }
 
 [[nodiscard]] std::string_view eval_args(int argc, char* argv[])
