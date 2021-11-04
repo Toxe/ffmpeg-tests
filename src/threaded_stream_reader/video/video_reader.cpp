@@ -56,10 +56,13 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
         has_started_ = true;
     }
 
+    const auto queue_not_full = [&] { return !video_content_provider->finished_video_frames_queue_is_full(); };
+    const auto stop_condition = [&] { return queue_not_full(); };
+
     while (!st.stop_requested()) {
         {
             std::unique_lock<std::mutex> lock(mtx_);
-            cv_.wait(lock, st, [&] { return !video_content_provider->finished_video_frames_queue_is_full(); });
+            cv_.wait(lock, st, stop_condition);
         }
 
         if (!st.stop_requested()) {
