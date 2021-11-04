@@ -7,7 +7,7 @@
 class VideoFrame;
 
 class VideoFrameQueue {
-    const std::size_t max_queue_size_ = 60;
+    const std::size_t max_queue_size_ = 10;
 
     std::mutex mtx_;
     std::vector<std::unique_ptr<VideoFrame>> queue_;
