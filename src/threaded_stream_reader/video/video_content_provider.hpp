@@ -27,7 +27,8 @@ public:
     void run();
     void stop();
 
-    bool has_finished() { return video_reader_.has_finished(); };
+    bool has_finished();
+    bool video_reader_has_finished();
 
     bool finished_video_frames_queue_is_full();
 
@@ -35,4 +36,6 @@ public:
     void add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame);
 
     [[nodiscard]] std::tuple<std::unique_ptr<VideoFrame>, int> next_frame(const double playback_position);
+
+    int finished_video_frames_queue_size() { return static_cast<int>(finished_video_frames_queue_.size()); };
 };

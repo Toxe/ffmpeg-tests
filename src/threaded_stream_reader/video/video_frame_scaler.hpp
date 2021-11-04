@@ -30,6 +30,9 @@ class VideoFrameScaler {
     int scale_width_ = 0;
     int scale_height_ = 0;
 
+    bool has_started_ = false;
+    bool has_finished_ = false;
+
     void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 
     void scale_frame(VideoFrame* video_frame);
@@ -41,6 +44,9 @@ public:
 
     void run(VideoContentProvider* video_content_provider, std::latch& latch);
     void stop();
+    void wakeup();
+
+    [[nodiscard]] bool has_finished();
 
     void add_to_queue(std::unique_ptr<VideoFrame> video_frame);
     [[nodiscard]] std::unique_ptr<VideoFrame> remove_from_queue();

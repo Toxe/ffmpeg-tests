@@ -56,14 +56,28 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
 
     latch.arrive_and_wait();
 
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        has_started_ = true;
+    }
+
+    const auto queue_is_empty = [&] { return queue_.empty(); };
+    const auto items_in_queue = [&] { return !queue_.empty(); };
+    const auto stop_condition = [&] { return items_in_queue() || (queue_is_empty() && video_content_provider->video_reader_has_finished()); };
+
     while (!st.stop_requested()) {
         {
             std::unique_lock<std::mutex> lock(mtx_);
-            cv_.wait(lock, st, [&] { return !queue_.empty(); });
+            cv_.wait(lock, st, stop_condition);
         }
 
         if (!st.stop_requested()) {
-            log_trace("(VideoFrameScaler) scale next frame");
+            {
+                // quit if there is no more work to do and the video reader has read all frames
+                std::lock_guard<std::mutex> lock(mtx_);
+                if (queue_.empty() && video_content_provider->video_reader_has_finished())
+                    break;
+            }
 
             std::unique_ptr<VideoFrame> video_frame = remove_from_queue();
 
@@ -74,7 +88,23 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
     }
 
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        has_finished_ = true;
+    }
+
     log_debug("(VideoFrameScaler) stopping");
+}
+
+void VideoFrameScaler::wakeup()
+{
+    cv_.notify_one();
+}
+
+bool VideoFrameScaler::has_finished()
+{
+    std::lock_guard<std::mutex> lock(mtx_);
+    return has_started_ && has_finished_;
 }
 
 void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)
@@ -84,7 +114,7 @@ void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)
         queue_.push(std::move(video_frame));
     }
 
-    cv_.notify_one();
+    wakeup();
 }
 
 std::unique_ptr<VideoFrame> VideoFrameScaler::remove_from_queue()
@@ -96,6 +126,7 @@ std::unique_ptr<VideoFrame> VideoFrameScaler::remove_from_queue()
 
     std::unique_ptr<VideoFrame> video_frame = std::move(queue_.front());
     queue_.pop();
+    log_trace(fmt::format("(VideoFrameScaler) removed from queue: {} (queue size now: {})", video_frame->print(), queue_.size()));
     return video_frame;
 }
 
