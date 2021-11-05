@@ -2,10 +2,6 @@
 
 #include "../../factory/factory.hpp"
 
-MockCodecContext::MockCodecContext()
-{
-}
-
 int MockCodecContext::width()
 {
     return 1920;

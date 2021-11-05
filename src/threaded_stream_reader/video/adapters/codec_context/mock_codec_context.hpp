@@ -6,8 +6,6 @@ class MockCodecContext : public CodecContext {
     int next_frame_number_ = 0;
 
 public:
-    MockCodecContext();
-
     [[nodiscard]] int width() override;
     [[nodiscard]] int height() override;
     [[nodiscard]] AVPixelFormat pixel_format() override;
