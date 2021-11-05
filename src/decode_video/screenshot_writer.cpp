@@ -33,7 +33,7 @@ void ScreenshotWriter::write(AVCodecContext* codec_context, AVFrame* frame)
     std::filesystem::path out_filename{filename_};
     out_filename.replace_filename(fmt::format("{}_{:03d}{}", out_filename.stem().string(), images_written_++, out_filename.extension().string()));
 
-    std::FILE* fp = std::fopen(out_filename.c_str(), "wb");
+    std::FILE* fp = std::fopen(out_filename.string().c_str(), "wb");
 
     if (!fp)
         throw std::runtime_error(fmt::format("unable to open output file: {}", out_filename.string()));
