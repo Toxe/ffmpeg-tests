@@ -6,12 +6,12 @@
 #include "../adapters/packet/mock_packet.hpp"
 #include "../adapters/scaling_context/mock_scaling_context.hpp"
 
-std::unique_ptr<CodecContext> MockFactory::create_codec_context(AVStream*)
+std::unique_ptr<CodecContext> MockFactory::create_codec_context(AVStream* /*stream*/)
 {
     return std::make_unique<MockCodecContext>();
 }
 
-std::unique_ptr<FormatContext> MockFactory::create_format_context(const std::string_view&)
+std::unique_ptr<FormatContext> MockFactory::create_format_context(const std::string_view& /*filename*/)
 {
     return std::make_unique<MockFormatContext>();
 }

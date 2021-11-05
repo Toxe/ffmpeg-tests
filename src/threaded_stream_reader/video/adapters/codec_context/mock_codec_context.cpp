@@ -17,7 +17,7 @@ AVPixelFormat MockCodecContext::pixel_format()
     return AV_PIX_FMT_YUV420P;
 }
 
-int MockCodecContext::send_packet(Packet*)
+int MockCodecContext::send_packet(Packet* /*packet*/)
 {
     return 0;
 }
