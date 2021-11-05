@@ -6,16 +6,12 @@
 
 void VideoFrameQueue::push(std::unique_ptr<VideoFrame> frame)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-
     queue_.push_back(std::move(frame));
     std::sort(queue_.begin(), queue_.end(), [](const std::unique_ptr<VideoFrame>& left, const std::unique_ptr<VideoFrame>& right) { return left->timestamp() < right->timestamp(); });
 }
 
 std::unique_ptr<VideoFrame> VideoFrameQueue::pop(double playback_position)
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-
     if (queue_.empty())
         return nullptr;
 
@@ -28,20 +24,17 @@ std::unique_ptr<VideoFrame> VideoFrameQueue::pop(double playback_position)
     }
 }
 
-std::size_t VideoFrameQueue::size()
+int VideoFrameQueue::size() const
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-    return queue_.size();
+    return static_cast<int>(queue_.size());
 }
 
-bool VideoFrameQueue::empty()
+bool VideoFrameQueue::empty() const
 {
-    std::lock_guard<std::mutex> lock(mtx_);
     return queue_.empty();
 }
 
-bool VideoFrameQueue::full()
+bool VideoFrameQueue::full() const
 {
-    std::lock_guard<std::mutex> lock(mtx_);
     return queue_.size() >= max_queue_size_;
 }

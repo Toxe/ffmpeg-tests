@@ -59,9 +59,10 @@ bool VideoContentProvider::video_reader_has_finished()
     return video_reader_.has_finished();
 }
 
-bool VideoContentProvider::finished_video_frames_queue_is_full()
+bool VideoContentProvider::finished_video_frames_queue_is_not_full()
 {
-    return finished_video_frames_queue_.full();
+    std::lock_guard<std::mutex> lock(mtx_);
+    return !finished_video_frames_queue_.full();
 }
 
 void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFrame> video_frame)
@@ -71,18 +72,21 @@ void VideoContentProvider::add_video_frame_for_scaling(std::unique_ptr<VideoFram
 
 void VideoContentProvider::add_finished_video_frame(std::unique_ptr<VideoFrame> video_frame)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
     finished_video_frames_queue_.push(std::move(video_frame));
 }
 
 std::tuple<std::unique_ptr<VideoFrame>, int> VideoContentProvider::next_frame(const double playback_position)
 {
+    std::lock_guard<std::mutex> lock(mtx_);
+
     std::unique_ptr<VideoFrame> video_frame = finished_video_frames_queue_.pop(playback_position);
 
-    if (video_frame && !finished_video_frames_queue_is_full())
+    if (video_frame && !finished_video_frames_queue_.full())
         video_reader_.continue_reading();
 
     if (!video_frame && video_reader_has_finished())
         video_frame_scaler_.wakeup();  // work done, wake up scaler so that it can quit
 
-    return std::make_tuple(std::move(video_frame), static_cast<int>(finished_video_frames_queue_.size()));
+    return std::make_tuple(std::move(video_frame), finished_video_frames_queue_.size());
 }

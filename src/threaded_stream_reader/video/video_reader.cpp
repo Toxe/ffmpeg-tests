@@ -56,7 +56,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
         has_started_ = true;
     }
 
-    const auto queue_not_full = [&] { return !video_content_provider->finished_video_frames_queue_is_full(); };
+    const auto queue_not_full = [&] { return video_content_provider->finished_video_frames_queue_is_not_full(); };
     const auto stop_condition = [&] { return queue_not_full(); };
 
     while (!st.stop_requested()) {
@@ -86,6 +86,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
 
 void VideoReader::continue_reading()
 {
+    log_debug("(VideoReader) continue_reading");
     cv_.notify_one();
 }
 
