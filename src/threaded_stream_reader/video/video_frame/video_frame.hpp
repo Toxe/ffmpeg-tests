@@ -11,7 +11,7 @@ class VideoFrame {
 public:
     VideoFrame(std::unique_ptr<Frame> frame);
 
-    [[nodiscard]] std::string print();
+    [[nodiscard]] std::string print() const;
 
     [[nodiscard]] int width() const { return frame_->dst_width(); };
     [[nodiscard]] int height() const { return frame_->dst_height(); };

@@ -7,7 +7,7 @@ VideoFrame::VideoFrame(std::unique_ptr<Frame> frame)
 {
 }
 
-std::string VideoFrame::print()
+std::string VideoFrame::print() const
 {
     return fmt::format("[VideoFrame {:.4f}, {}x{}]", timestamp(), width(), height());
 }
