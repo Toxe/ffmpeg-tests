@@ -47,6 +47,8 @@ add_executable(threaded_stream_reader
     video/video_content_provider/video_frame_scaler.hpp
     video/video_content_provider/video_reader.cpp
     video/video_content_provider/video_reader.hpp
+    video/video_content_provider/work_thread.cpp
+    video/video_content_provider/work_thread.hpp
     video/video_file.cpp
     video/video_file.hpp
     video/video_frame/video_frame.cpp

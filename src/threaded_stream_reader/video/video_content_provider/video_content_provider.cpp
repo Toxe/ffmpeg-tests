@@ -83,7 +83,7 @@ std::tuple<std::unique_ptr<VideoFrame>, int> VideoContentProvider::next_frame(co
     std::unique_ptr<VideoFrame> video_frame = finished_video_frames_queue_.pop(playback_position);
 
     if (video_frame && !finished_video_frames_queue_.full())
-        video_reader_.continue_reading();
+        video_reader_.wakeup();
 
     if (!video_frame && video_reader_has_finished())
         video_frame_scaler_.wakeup();  // work done, wake up scaler so that it can quit

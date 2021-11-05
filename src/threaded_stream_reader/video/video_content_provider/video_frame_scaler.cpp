@@ -13,41 +13,17 @@
 #include "video_content_provider.hpp"
 
 VideoFrameScaler::VideoFrameScaler(Factory* factory, StreamInfo* video_stream_info, const int width, const int height)
-    : factory_{factory}
+    : WorkThread{factory, "VideoFrameScaler"}
 {
     video_stream_info_ = video_stream_info;
 
     scale_width_ = width;
     scale_height_ = height;
 
-    scaling_context_ = factory_->create_scaling_context(video_stream_info_->codec_context(), width, height);
+    scaling_context_ = factory->create_scaling_context(video_stream_info_->codec_context(), width, height);
 
     if (!scaling_context_)
         throw std::runtime_error("create_scaling_context");
-}
-
-VideoFrameScaler::~VideoFrameScaler()
-{
-    stop();
-}
-
-void VideoFrameScaler::run(VideoContentProvider* video_content_provider, std::latch& latch)
-{
-    if (!thread_.joinable()) {
-        log_debug("(VideoFrameScaler) run");
-
-        thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(st, video_content_provider, latch); });
-    }
-}
-
-void VideoFrameScaler::stop()
-{
-    if (thread_.joinable()) {
-        log_debug("(VideoFrameScaler) stop");
-
-        thread_.request_stop();
-        thread_.join();
-    }
 }
 
 void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)
@@ -56,7 +32,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
 
     latch.arrive_and_wait();
 
-    state_ = RunState::running;
+    set_state(RunState::running);
 
     const auto queue_is_empty = [&] { return queue_.empty(); };
     const auto items_in_queue = [&] { return !queue_.empty(); };
@@ -85,19 +61,9 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
     }
 
-    state_ = RunState::fnished;
+    set_state(RunState::fnished);
 
     log_debug("(VideoFrameScaler) stopping");
-}
-
-void VideoFrameScaler::wakeup()
-{
-    cv_.notify_one();
-}
-
-bool VideoFrameScaler::has_finished()
-{
-    return state_ == RunState::fnished;
 }
 
 void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)
@@ -139,7 +105,7 @@ int VideoFrameScaler::resize_scaling_context(int width, int height)
     scale_width_ = width;
     scale_height_ = height;
 
-    scaling_context_ = factory_->create_scaling_context(video_stream_info_->codec_context(), width, height);
+    scaling_context_ = factory()->create_scaling_context(video_stream_info_->codec_context(), width, height);
 
     if (!scaling_context_)
         return show_error("create_scaling_context");

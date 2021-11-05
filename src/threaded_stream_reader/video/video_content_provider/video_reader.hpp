@@ -1,15 +1,11 @@
 #pragma once
 
-#include <atomic>
-#include <condition_variable>
 #include <latch>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <stop_token>
-#include <thread>
 
-#include "run_state.hpp"
+#include "work_thread.hpp"
 
 class Factory;
 class Packet;
@@ -17,13 +13,7 @@ class StreamInfo;
 class VideoContentProvider;
 class VideoFrame;
 
-class VideoReader {
-    Factory* factory_;
-
-    std::mutex mtx_;
-    std::condition_variable_any cv_;
-    std::jthread thread_;
-
+class VideoReader : public WorkThread {
     std::unique_ptr<Packet> packet_;
 
     StreamInfo* audio_stream_info_;
@@ -32,21 +22,11 @@ class VideoReader {
     int scale_width_ = 0;
     int scale_height_ = 0;
 
-    std::atomic<RunState> state_ = RunState::starting;
-
-    void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
+    void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch) override;
 
     [[nodiscard]] std::optional<std::unique_ptr<VideoFrame>> read();
     [[nodiscard]] std::unique_ptr<VideoFrame> decode_video_packet(Packet* packet);
 
 public:
     VideoReader(Factory* factory, StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height);
-    ~VideoReader();
-
-    void run(VideoContentProvider* video_content_provider, std::latch& latch);
-    void stop();
-
-    [[nodiscard]] bool has_finished();
-
-    void continue_reading();
 };

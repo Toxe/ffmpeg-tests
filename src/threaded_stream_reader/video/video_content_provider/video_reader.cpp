@@ -10,7 +10,7 @@
 #include "video_content_provider.hpp"
 
 VideoReader::VideoReader(Factory* factory, StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height)
-    : factory_{factory}
+    : WorkThread{factory, "VideoReader"}
 {
     audio_stream_info_ = audio_stream_info;
     video_stream_info_ = video_stream_info;
@@ -18,31 +18,7 @@ VideoReader::VideoReader(Factory* factory, StreamInfo* audio_stream_info, Stream
     scale_width_ = scale_width;
     scale_height_ = scale_height;
 
-    packet_ = factory_->create_packet();
-}
-
-VideoReader::~VideoReader()
-{
-    stop();
-}
-
-void VideoReader::run(VideoContentProvider* video_content_provider, std::latch& latch)
-{
-    if (!thread_.joinable()) {
-        log_debug("(VideoReader) run");
-
-        thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(st, video_content_provider, latch); });
-    }
-}
-
-void VideoReader::stop()
-{
-    if (thread_.joinable()) {
-        log_debug("(VideoReader) stop");
-
-        thread_.request_stop();
-        thread_.join();
-    }
+    packet_ = factory->create_packet();
 }
 
 void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch)
@@ -51,7 +27,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
 
     latch.arrive_and_wait();
 
-    state_ = RunState::running;
+    set_state(RunState::running);
 
     const auto queue_not_full = [&] { return video_content_provider->finished_video_frames_queue_is_not_full(); };
     const auto stop_condition = [&] { return queue_not_full(); };
@@ -73,19 +49,9 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
         }
     }
 
-    state_ = RunState::fnished;
+    set_state(RunState::fnished);
 
     log_debug("(VideoReader) stopping");
-}
-
-void VideoReader::continue_reading()
-{
-    cv_.notify_one();
-}
-
-bool VideoReader::has_finished()
-{
-    return state_ == RunState::fnished;
 }
 
 std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
@@ -123,5 +89,5 @@ std::unique_ptr<VideoFrame> VideoReader::decode_video_packet(Packet* packet)
         return nullptr;
 
     // get available frame from the decoder
-    return video_stream_info_->receive_video_frame(factory_, scale_width_, scale_height_);
+    return video_stream_info_->receive_video_frame(factory(), scale_width_, scale_height_);
 }
