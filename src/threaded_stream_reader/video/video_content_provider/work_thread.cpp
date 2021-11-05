@@ -19,7 +19,7 @@ void WorkThread::run(VideoContentProvider* video_content_provider, std::latch& l
     if (!thread_.joinable()) {
         log_debug(fmt::format("({}) run", log_class_name_));
 
-        thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(st, video_content_provider, latch); });
+        thread_ = std::jthread([this, video_content_provider, &latch](std::stop_token st) { main(std::move(st), video_content_provider, latch); });
     }
 }
 
