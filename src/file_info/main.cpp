@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <string_view>
 
 #include <fmt/core.h>
@@ -16,20 +17,20 @@ void die(const char* error_text)
     std::exit(2);
 }
 
-std::string_view eval_args(int argc, char* argv[])
+std::string_view eval_args(std::span<char*> args)
 {
-    if (argc < 2)
+    if (args.size() < 2)
         die("missing filename");
 
-    if (!std::filesystem::exists(argv[1]))
+    if (!std::filesystem::exists(args[1]))
         die("file not found");
 
-    return argv[1];
+    return args[1];
 }
 
 int main(int argc, char* argv[])
 {
-    std::string_view filename = eval_args(argc, argv);
+    std::string_view filename = eval_args({argv, static_cast<std::size_t>(argc)});
 
     // allocate format context
     std::unique_ptr<AVFormatContext, void (*)(AVFormatContext*)> format_context(avformat_alloc_context(), [](AVFormatContext* fmt_ctx) { avformat_close_input(&fmt_ctx); });

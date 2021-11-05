@@ -1,6 +1,7 @@
 #include <chrono>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <string_view>
 #include <thread>
 
@@ -22,22 +23,22 @@ void do_something_with_the_frame(VideoFrame* video_frame)
         pixel ^= p;
 }
 
-[[nodiscard]] std::string_view eval_args(int argc, char* argv[])
+[[nodiscard]] std::string_view eval_args(std::span<char*> args)
 {
-    if (argc < 2)
+    if (args.size() < 2)
         die("missing filename");
 
-    if (!std::filesystem::exists(argv[1]))
-        die(fmt::format("file not found: {}", argv[1]));
+    if (!std::filesystem::exists(args[1]))
+        die(fmt::format("file not found: {}", args[1]));
 
-    return argv[1];
+    return args[1];
 }
 
 int main(int argc, char* argv[])
 {
     log_init();
 
-    std::string_view filename = eval_args(argc, argv);
+    std::string_view filename = eval_args({argv, static_cast<std::size_t>(argc)});
 
     const auto factory = std::make_unique<FFmpegFactory>();
     // const auto factory = std::make_unique<MockFactory>();

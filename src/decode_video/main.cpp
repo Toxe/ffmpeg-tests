@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <memory>
 #include <optional>
+#include <span>
 #include <string_view>
 #include <tuple>
 
@@ -116,15 +117,15 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     return 0;
 }
 
-[[nodiscard]] std::string_view eval_args(int argc, char* argv[])
+[[nodiscard]] std::string_view eval_args(std::span<char*> args)
 {
-    if (argc < 2)
+    if (args.size() < 2)
         die("missing filename");
 
-    if (!std::filesystem::exists(argv[1]))
+    if (!std::filesystem::exists(args[1]))
         die("file not found");
 
-    return argv[1];
+    return args[1];
 }
 
 [[nodiscard]] int decode_file(const std::string_view& filename, AudioWriter& audio_writer, ScreenshotWriter& screenshot_writer)
@@ -220,7 +221,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
 int main(int argc, char* argv[])
 {
-    std::string_view filename = eval_args(argc, argv);
+    std::string_view filename = eval_args({argv, static_cast<std::size_t>(argc)});
 
     AudioWriter audio_writer{"audio.raw"};
     ScreenshotWriter screenshot_writer("screenshot.raw");
