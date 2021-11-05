@@ -46,6 +46,6 @@ std::span<const uint8_t> FFmpegFrame::pixels()
 
 void FFmpegFrame::image_copy()
 {
-    av_image_copy(src_data(), src_linesizes(), const_cast<const uint8_t**>(frame_->data), frame_->linesize, src_pixel_format_, src_width(), src_height());
+    av_image_copy(src_data(), src_linesizes(), const_cast<const uint8_t**>(frame_->data), &frame_->linesize[0], src_pixel_format_, src_width(), src_height());
     av_frame_unref(frame_.get());
 }

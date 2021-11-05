@@ -39,7 +39,7 @@ void ScreenshotWriter::write(AVCodecContext* codec_context, AVFrame* frame)
         throw std::runtime_error(fmt::format("unable to open output file: {}", out_filename.string()));
 
     // copy decoded frame to image buffer
-    av_image_copy(img_buf_data_.data(), img_buf_linesize_.data(), const_cast<const uint8_t**>(frame->data), frame->linesize, codec_context->pix_fmt, codec_context->width, codec_context->height);
+    av_image_copy(img_buf_data_.data(), img_buf_linesize_.data(), const_cast<const uint8_t**>(frame->data), &frame->linesize[0], codec_context->pix_fmt, codec_context->width, codec_context->height);
 
     // convert to destination format
     sws_scale(scaling_context_, img_buf_data_.data(), img_buf_linesize_.data(), 0, codec_context->height, dst_buf_data_.data(), dst_buf_linesize_.data());
