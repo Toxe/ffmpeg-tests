@@ -24,9 +24,9 @@ using auto_delete_ressource = std::unique_ptr<T, void (*)(T*)>;
 int show_error(const std::string_view& error_message, std::optional<int> error_code = std::nullopt)
 {
     if (error_code.has_value()) {
-        char buf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(error_code.value(), buf, AV_ERROR_MAX_STRING_SIZE);
-        fmt::print("error: {} ({})\n", error_message, buf);
+        std::array<char, AV_ERROR_MAX_STRING_SIZE> buf = {0};
+        av_strerror(error_code.value(), buf.data(), AV_ERROR_MAX_STRING_SIZE);
+        fmt::print("error: {} ({})\n", error_message, buf.data());
         return error_code.value();
     } else {
         fmt::print("error: {}\n", error_message);

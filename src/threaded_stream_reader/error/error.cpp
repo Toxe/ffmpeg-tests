@@ -1,5 +1,6 @@
 #include "error.hpp"
 
+#include <array>
 #include <cstdlib>
 
 #include <fmt/core.h>
@@ -13,9 +14,9 @@ extern "C" {
 int show_error(const std::string& error_message, std::optional<int> error_code)
 {
     if (error_code.has_value()) {
-        char buf[AV_ERROR_MAX_STRING_SIZE];
-        av_strerror(error_code.value(), buf, AV_ERROR_MAX_STRING_SIZE);
-        log_error(fmt::format("{} ({})", error_message, buf));
+        std::array<char, AV_ERROR_MAX_STRING_SIZE> buf = {0};
+        av_strerror(error_code.value(), buf.data(), AV_ERROR_MAX_STRING_SIZE);
+        log_error(fmt::format("{} ({})", error_message, buf.data()));
         return error_code.value();
     } else {
         log_error(error_message);
