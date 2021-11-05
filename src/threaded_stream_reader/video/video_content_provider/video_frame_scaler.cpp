@@ -119,7 +119,6 @@ std::unique_ptr<VideoFrame> VideoFrameScaler::remove_from_queue()
 
     std::unique_ptr<VideoFrame> video_frame = std::move(queue_.front());
     queue_.pop();
-    log_trace(fmt::format("(VideoFrameScaler) removed from queue: {} (queue size now: {})", video_frame->print(), queue_.size()));
     return video_frame;
 }
 
@@ -129,11 +128,8 @@ void VideoFrameScaler::scale_frame(VideoFrame* video_frame)
     // if (scale_width_ != video_frame->width_ || scale_height_ != video_frame->height_)
     //     resize_scaling_context(video_frame->width_, video_frame->height_);
 
-    if (scaling_context_) {
-        log_trace(fmt::format("(VideoFrameScaler) scale frame: {}", video_frame->print()));
-
+    if (scaling_context_)
         scaling_context_->scale(video_frame);
-    }
 }
 
 int VideoFrameScaler::resize_scaling_context(int width, int height)

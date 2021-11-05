@@ -80,7 +80,6 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
 
 void VideoReader::continue_reading()
 {
-    log_debug("(VideoReader) continue_reading");
     cv_.notify_one();
 }
 
