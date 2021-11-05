@@ -4,10 +4,10 @@
 
 #include <fmt/core.h>
 
+#include "../factory/factory.hpp"
+#include "../video_frame/video_frame.hpp"
 #include "error/error.hpp"
-#include "factory/factory.hpp"
 #include "logger/logger.hpp"
-#include "video_frame/video_frame.hpp"
 
 VideoContentProvider::VideoContentProvider(Factory* factory, VideoFile& video_file, const int scale_width, const int scale_height)
     : factory_{factory},

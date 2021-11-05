@@ -38,18 +38,18 @@ add_executable(threaded_stream_reader
     video/factory/mock_factory.hpp
     video/stream_info/stream_info.cpp
     video/stream_info/stream_info.hpp
-    video/video_content_provider.cpp
-    video/video_content_provider.hpp
+    video/video_content_provider/video_content_provider.cpp
+    video/video_content_provider/video_content_provider.hpp
+    video/video_content_provider/video_frame_queue.cpp
+    video/video_content_provider/video_frame_queue.hpp
+    video/video_content_provider/video_frame_scaler.cpp
+    video/video_content_provider/video_frame_scaler.hpp
+    video/video_content_provider/video_reader.cpp
+    video/video_content_provider/video_reader.hpp
     video/video_file.cpp
     video/video_file.hpp
-    video/video_frame_queue.cpp
-    video/video_frame_queue.hpp
-    video/video_frame_scaler.cpp
-    video/video_frame_scaler.hpp
     video/video_frame/video_frame.cpp
     video/video_frame/video_frame.hpp
-    video/video_reader.cpp
-    video/video_reader.hpp
 )
 
 set_target_properties(threaded_stream_reader PROPERTIES CXX_EXTENSIONS OFF)

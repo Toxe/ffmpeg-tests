@@ -4,13 +4,13 @@
 
 #include <fmt/core.h>
 
-#include "adapters/scaling_context/scaling_context.hpp"
+#include "../adapters/scaling_context/scaling_context.hpp"
+#include "../factory/factory.hpp"
+#include "../stream_info/stream_info.hpp"
+#include "../video_frame/video_frame.hpp"
 #include "error/error.hpp"
-#include "factory/factory.hpp"
 #include "logger/logger.hpp"
-#include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
-#include "video_frame/video_frame.hpp"
 
 VideoFrameScaler::VideoFrameScaler(Factory* factory, StreamInfo* video_stream_info, const int width, const int height)
     : factory_{factory}

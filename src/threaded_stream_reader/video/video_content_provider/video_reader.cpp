@@ -1,13 +1,13 @@
 #include "video_reader.hpp"
 
-#include "adapters/format_context/format_context.hpp"
-#include "adapters/packet/packet.hpp"
+#include "../adapters/format_context/format_context.hpp"
+#include "../adapters/packet/packet.hpp"
+#include "../factory/factory.hpp"
+#include "../stream_info/stream_info.hpp"
+#include "../video_frame/video_frame.hpp"
 #include "error/error.hpp"
-#include "factory/factory.hpp"
 #include "logger/logger.hpp"
-#include "stream_info/stream_info.hpp"
 #include "video_content_provider.hpp"
-#include "video_frame/video_frame.hpp"
 
 VideoReader::VideoReader(Factory* factory, StreamInfo* audio_stream_info, StreamInfo* video_stream_info, const int scale_width, const int scale_height)
     : factory_{factory}

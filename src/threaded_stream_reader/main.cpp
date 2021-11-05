@@ -10,7 +10,7 @@
 #include "logger/logger.hpp"
 #include "video/factory/ffmpeg_factory.hpp"
 #include "video/factory/mock_factory.hpp"
-#include "video/video_content_provider.hpp"
+#include "video/video_content_provider/video_content_provider.hpp"
 #include "video/video_file.hpp"
 #include "video/video_frame/video_frame.hpp"
 
