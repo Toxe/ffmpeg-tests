@@ -38,6 +38,7 @@ add_executable(threaded_stream_reader
     video/factory/mock_factory.hpp
     video/stream_info/stream_info.cpp
     video/stream_info/stream_info.hpp
+    video/video_content_provider/run_state.hpp
     video/video_content_provider/video_content_provider.cpp
     video/video_content_provider/video_content_provider.hpp
     video/video_content_provider/video_frame_queue.cpp

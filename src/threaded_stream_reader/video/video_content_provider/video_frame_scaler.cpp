@@ -56,10 +56,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
 
     latch.arrive_and_wait();
 
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        has_started_ = true;
-    }
+    state_ = RunState::running;
 
     const auto queue_is_empty = [&] { return queue_.empty(); };
     const auto items_in_queue = [&] { return !queue_.empty(); };
@@ -88,10 +85,7 @@ void VideoFrameScaler::main(std::stop_token st, VideoContentProvider* video_cont
         }
     }
 
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        has_finished_ = true;
-    }
+    state_ = RunState::fnished;
 
     log_debug("(VideoFrameScaler) stopping");
 }
@@ -103,8 +97,7 @@ void VideoFrameScaler::wakeup()
 
 bool VideoFrameScaler::has_finished()
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-    return has_started_ && has_finished_;
+    return state_ == RunState::fnished;
 }
 
 void VideoFrameScaler::add_to_queue(std::unique_ptr<VideoFrame> video_frame)

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <condition_variable>
 #include <latch>
 #include <memory>
@@ -7,6 +8,8 @@
 #include <queue>
 #include <stop_token>
 #include <thread>
+
+#include "run_state.hpp"
 
 class Factory;
 class ScalingContext;
@@ -30,8 +33,7 @@ class VideoFrameScaler {
     int scale_width_ = 0;
     int scale_height_ = 0;
 
-    bool has_started_ = false;
-    bool has_finished_ = false;
+    std::atomic<RunState> state_ = RunState::starting;
 
     void main(std::stop_token st, VideoContentProvider* video_content_provider, std::latch& latch);
 

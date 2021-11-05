@@ -51,10 +51,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
 
     latch.arrive_and_wait();
 
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        has_started_ = true;
-    }
+    state_ = RunState::running;
 
     const auto queue_not_full = [&] { return video_content_provider->finished_video_frames_queue_is_not_full(); };
     const auto stop_condition = [&] { return queue_not_full(); };
@@ -76,10 +73,7 @@ void VideoReader::main(std::stop_token st, VideoContentProvider* video_content_p
         }
     }
 
-    {
-        std::lock_guard<std::mutex> lock(mtx_);
-        has_finished_ = true;
-    }
+    state_ = RunState::fnished;
 
     log_debug("(VideoReader) stopping");
 }
@@ -92,8 +86,7 @@ void VideoReader::continue_reading()
 
 bool VideoReader::has_finished()
 {
-    std::lock_guard<std::mutex> lock(mtx_);
-    return has_started_ && has_finished_;
+    return state_ == RunState::fnished;
 }
 
 std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
