@@ -4,6 +4,8 @@ struct AVPacket;
 
 class Packet {
 public:
+    virtual ~Packet() = default;
+
     [[nodiscard]] virtual int stream_index() = 0;
     virtual void set_stream_index(const int) { }
 

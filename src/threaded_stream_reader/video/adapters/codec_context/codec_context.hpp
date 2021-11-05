@@ -12,6 +12,8 @@ class Packet;
 
 class CodecContext {
 public:
+    virtual ~CodecContext() = default;
+
     [[nodiscard]] virtual int width() = 0;
     [[nodiscard]] virtual int height() = 0;
     [[nodiscard]] virtual AVPixelFormat pixel_format() = 0;

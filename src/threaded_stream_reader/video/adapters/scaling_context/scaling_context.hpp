@@ -29,5 +29,7 @@ public:
         dst_pixel_format_ = AV_PIX_FMT_RGBA;
     }
 
+    virtual ~ScalingContext() = default;
+
     virtual int scale(VideoFrame* video_frame) = 0;
 };

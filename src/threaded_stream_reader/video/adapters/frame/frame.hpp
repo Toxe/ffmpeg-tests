@@ -15,7 +15,7 @@ class Frame {
 
 public:
     Frame(CodecContext* codec_context, const int scaled_width, const int scaled_height);
-    virtual ~Frame() { }
+    virtual ~Frame() = default;
 
     [[nodiscard]] double timestamp() const;
     void set_timestamp(const double timestamp);
