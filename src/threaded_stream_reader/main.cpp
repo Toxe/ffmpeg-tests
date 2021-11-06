@@ -11,6 +11,7 @@
 #include "logger/logger.hpp"
 #include "video/factory/ffmpeg_factory.hpp"
 #include "video/factory/mock_factory.hpp"
+#include "video/stream_info/stream_info.hpp"
 #include "video/video_content_provider/video_content_provider.hpp"
 #include "video/video_file.hpp"
 #include "video/video_frame/video_frame.hpp"
@@ -21,6 +22,22 @@ void do_something_with_the_frame(VideoFrame* video_frame)
 
     for (const auto& p : video_frame->frame()->pixels())
         pixel ^= p;
+}
+
+void show_file_info(const VideoFile& video_file)
+{
+    if (!video_file.is_open())
+        return;
+
+    log_info(fmt::format("{} ({})", video_file.filename(), video_file.file_format()));
+
+    log_info(fmt::format("stream #{} ({}):", video_file.video_stream_info()->stream_index(), video_file.video_stream_info()->codec_type()));
+    log_info(fmt::format("    {}", video_file.video_stream_info()->codec_name()));
+    log_info(fmt::format("    {}", video_file.video_stream_info()->codec_additional_info()));
+
+    log_info(fmt::format("stream #{} ({}):", video_file.audio_stream_info()->stream_index(), video_file.audio_stream_info()->codec_type()));
+    log_info(fmt::format("    {}", video_file.audio_stream_info()->codec_name()));
+    log_info(fmt::format("    {}", video_file.audio_stream_info()->codec_additional_info()));
 }
 
 [[nodiscard]] std::string_view eval_args(std::span<char*> args)
@@ -48,6 +65,8 @@ int main(int argc, char* argv[])
     VideoFile video_file(filename, factory.get());
     VideoContentProvider video_content_provider(factory.get(), video_file, 640, 480);
     video_content_provider.run();
+
+    show_file_info(video_file);
 
     // begin playback
     auto playback_begin = std::chrono::steady_clock::now();
