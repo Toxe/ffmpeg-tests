@@ -1,7 +1,7 @@
 #include "error.hpp"
 
 #include <array>
-#include <cstdlib>
+#include <stdexcept>
 
 #include <fmt/core.h>
 
@@ -27,8 +27,8 @@ int show_error(const std::string& error_message, std::optional<int> error_code)
     return ret_code;
 }
 
-[[noreturn]] void die(const std::string& error_message)
+void die(const std::string& error_message)
 {
-    show_error(error_message);
-    std::exit(2);
+    log_critical(error_message);
+    throw std::runtime_error(error_message);
 }
