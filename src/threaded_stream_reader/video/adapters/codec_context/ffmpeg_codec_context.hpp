@@ -12,6 +12,10 @@ class FFmpegCodecContext : public CodecContext {
 public:
     FFmpegCodecContext(AVStream* stream);
 
+    [[nodiscard]] std::string codec_type() override;
+    [[nodiscard]] std::string codec_name() override;
+    [[nodiscard]] std::string codec_additional_info() override;
+
     [[nodiscard]] int width() const override;
     [[nodiscard]] int height() const override;
     [[nodiscard]] AVPixelFormat pixel_format() const override;

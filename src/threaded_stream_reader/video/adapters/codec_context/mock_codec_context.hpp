@@ -6,6 +6,10 @@ class MockCodecContext : public CodecContext {
     int next_frame_number_ = 0;
 
 public:
+    [[nodiscard]] std::string codec_type() override;
+    [[nodiscard]] std::string codec_name() override;
+    [[nodiscard]] std::string codec_additional_info() override;
+
     [[nodiscard]] int width() const override;
     [[nodiscard]] int height() const override;
     [[nodiscard]] AVPixelFormat pixel_format() const override;

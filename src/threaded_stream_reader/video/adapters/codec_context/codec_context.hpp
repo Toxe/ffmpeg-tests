@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <string>
 
 extern "C" {
 #include <libavutil/pixfmt.h>
@@ -13,6 +14,10 @@ class Packet;
 class CodecContext {
 public:
     virtual ~CodecContext() = default;
+
+    [[nodiscard]] virtual std::string codec_type() = 0;
+    [[nodiscard]] virtual std::string codec_name() = 0;
+    [[nodiscard]] virtual std::string codec_additional_info() = 0;
 
     [[nodiscard]] virtual int width() const = 0;
     [[nodiscard]] virtual int height() const = 0;

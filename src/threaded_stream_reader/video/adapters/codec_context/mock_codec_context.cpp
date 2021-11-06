@@ -5,6 +5,21 @@
 constexpr int default_width = 1920;
 constexpr int default_height = 1080;
 
+std::string MockCodecContext::codec_type()
+{
+    return "";
+}
+
+std::string MockCodecContext::codec_name()
+{
+    return "";
+}
+
+std::string MockCodecContext::codec_additional_info()
+{
+    return "";
+}
+
 int MockCodecContext::width() const
 {
     return default_width;

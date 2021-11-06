@@ -7,6 +7,9 @@
 StreamInfo::StreamInfo(FormatContext* format_context, std::unique_ptr<CodecContext> codec_context, int stream_index)
     : format_context_{format_context}, codec_context_{std::move(codec_context)}, stream_index_{stream_index}
 {
+    codec_type_ = codec_context_->codec_type();
+    codec_name_ = codec_context_->codec_name();
+    codec_additional_info_ = codec_context_->codec_additional_info();
 }
 
 double StreamInfo::time_base() const

@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include <fmt/core.h>
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
@@ -39,6 +41,28 @@ FFmpegCodecContext::FFmpegCodecContext(AVStream* stream)
 
     if (ret < 0)
         throw std::runtime_error("avcodec_open2");
+}
+
+std::string FFmpegCodecContext::codec_type()
+{
+    return av_get_media_type_string(codec_context_->codec_type);
+}
+
+std::string FFmpegCodecContext::codec_name()
+{
+    return codec_context_->codec->long_name;
+}
+
+std::string FFmpegCodecContext::codec_additional_info()
+{
+    std::string info;
+
+    if (codec_context_->codec_type == AVMEDIA_TYPE_VIDEO)
+        info = fmt::format("{}x{}", codec_context_->width, codec_context_->height);
+    else if (codec_context_->codec_type == AVMEDIA_TYPE_AUDIO)
+        info = fmt::format("{} channels, {} sample rate", codec_context_->channels, codec_context_->sample_rate);
+
+    return info;
 }
 
 int FFmpegCodecContext::width() const
