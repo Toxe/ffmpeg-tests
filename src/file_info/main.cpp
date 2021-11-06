@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
         die("avformat_alloc_context");
 
     // open input file
-    auto p_ctx = format_context.get();
+    AVFormatContext* p_ctx = format_context.get();
 
     if (avformat_open_input(&p_ctx, filename.data(), nullptr, nullptr) < 0)
         die("avformat_open_input");
@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
     fmt::print("bit rate: {}\n", format_context->bit_rate);
 
     for (unsigned int i = 0; i < format_context->nb_streams; ++i) {
-        auto codec_params = format_context->streams[i]->codecpar;
-        auto codec = avcodec_find_decoder(codec_params->codec_id);
+        AVCodecParameters* codec_params = format_context->streams[i]->codecpar;
+        AVCodec* codec = avcodec_find_decoder(codec_params->codec_id);
 
         fmt::print("stream #{} ({}):\n", i, av_get_media_type_string(codec_params->codec_type));
         fmt::print("    codec: {}\n", codec->long_name);

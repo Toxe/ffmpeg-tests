@@ -25,7 +25,7 @@ FFmpegFormatContext::FFmpegFormatContext(const std::string_view& filename)
         throw std::runtime_error("avformat_alloc_context");
 
     // open input file
-    auto p_ctx = format_context_.get();
+    AVFormatContext* p_ctx = format_context_.get();
 
     int ret = avformat_open_input(&p_ctx, filename.data(), nullptr, nullptr);
 

@@ -140,7 +140,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
         return show_error("avformat_alloc_context");
 
     // open input file
-    auto p_ctx = format_context.get();
+    AVFormatContext* p_ctx = format_context.get();
 
     int ret = avformat_open_input(&p_ctx, filename.data(), nullptr, nullptr);
 
@@ -165,7 +165,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     // allocate buffer for decoded source images
     std::array<uint8_t*, 4> img_buf_data = {nullptr};
-    std::array<int, 4> img_buf_linesize;
+    std::array<int, 4> img_buf_linesize = {0};
 
     const int img_buf_size = av_image_alloc(img_buf_data.data(), img_buf_linesize.data(), video_codec_context->width, video_codec_context->height, video_codec_context->pix_fmt, 1);
 
@@ -174,7 +174,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     // allocate buffer for scaled output images
     std::array<uint8_t*, 4> dst_buf_data = {nullptr};
-    std::array<int, 4> dst_buf_linesize;
+    std::array<int, 4> dst_buf_linesize = {0};
 
     const int dst_buf_size = av_image_alloc(dst_buf_data.data(), dst_buf_linesize.data(), video_codec_context->width, video_codec_context->height, AV_PIX_FMT_RGB24, 1);
 
