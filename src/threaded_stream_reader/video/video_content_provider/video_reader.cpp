@@ -58,10 +58,8 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
 {
     // read until we get at least one video frame
     while (true) {
-        int ret = video_stream_info_->format_context()->read_frame(packet_.get());
-
-        if (ret < 0)
-            return std::nullopt;
+        if (video_stream_info_->format_context()->read_frame(packet_.get()) < 0)
+            break;
 
         // process only interesting packets, drop the rest
         if (packet_->stream_index() == video_stream_info_->stream_index()) {
@@ -74,9 +72,6 @@ std::optional<std::unique_ptr<VideoFrame>> VideoReader::read()
         } else {
             packet_->unref();
         }
-
-        if (ret < 0)
-            break;
     }
 
     return std::nullopt;

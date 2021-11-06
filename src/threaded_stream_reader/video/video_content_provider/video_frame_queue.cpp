@@ -12,16 +12,14 @@ void VideoFrameQueue::push(std::unique_ptr<VideoFrame> video_frame)
 
 std::unique_ptr<VideoFrame> VideoFrameQueue::pop(double playback_position)
 {
-    if (queue_.empty())
-        return nullptr;
+    std::unique_ptr<VideoFrame> video_frame = nullptr;
 
-    if (queue_.front()->timestamp() <= playback_position) {
-        auto video_frame = std::move(queue_.front());
+    if (!queue_.empty() && queue_.front()->timestamp() <= playback_position) {
+        video_frame = std::move(queue_.front());
         queue_.erase(queue_.begin());
-        return video_frame;
-    } else {
-        return nullptr;
     }
+
+    return video_frame;
 }
 
 int VideoFrameQueue::size() const
