@@ -5,10 +5,12 @@
 #include "../packet/packet.hpp"
 #include "error/error.hpp"
 
+constexpr double video_time_base = 1.0 / 60.0;
+constexpr double audio_time_base = 1.0 / 48000.0;
+
 double MockFormatContext::stream_time_base(const int stream_index) const
 {
-    return stream_index == 0 ? 1.0 / 60.0
-                             : 1.0 / 48000.0;
+    return stream_index == 0 ? video_time_base : audio_time_base;
 }
 
 std::unique_ptr<StreamInfo> MockFormatContext::find_best_stream(Factory* factory, const StreamType type)

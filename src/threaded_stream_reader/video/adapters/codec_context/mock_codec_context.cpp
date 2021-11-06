@@ -2,14 +2,17 @@
 
 #include "../../factory/factory.hpp"
 
+constexpr int default_width = 1920;
+constexpr int default_height = 1080;
+
 int MockCodecContext::width() const
 {
-    return 1920;
+    return default_width;
 }
 
 int MockCodecContext::height() const
 {
-    return 1080;
+    return default_height;
 }
 
 AVPixelFormat MockCodecContext::pixel_format() const

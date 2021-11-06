@@ -9,6 +9,8 @@ extern "C" {
 #include <libswscale/swscale.h>
 }
 
+constexpr int number_of_screenshots = 10;
+
 ScreenshotWriter::ScreenshotWriter(const char* filename)
     : filename_{filename}
 {
@@ -27,7 +29,7 @@ void ScreenshotWriter::set_image_buffer(std::array<uint8_t*, 4>& img_buf_data, s
 
 void ScreenshotWriter::write(AVCodecContext* codec_context, AVFrame* frame)
 {
-    if (images_written_ >= 10)
+    if (images_written_ >= number_of_screenshots)
         return;
 
     std::filesystem::path out_filename{filename_};
