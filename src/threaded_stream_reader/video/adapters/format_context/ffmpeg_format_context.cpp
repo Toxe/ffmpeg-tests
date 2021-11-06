@@ -45,6 +45,11 @@ double FFmpegFormatContext::stream_time_base(const int stream_index) const
     return av_q2d(stream->time_base);
 }
 
+const std::string FFmpegFormatContext::format() const
+{
+    return format_context_->iformat->long_name;
+}
+
 std::unique_ptr<StreamInfo> FFmpegFormatContext::find_best_stream(Factory* factory, const StreamType type)
 {
     const AVMediaType media_type = type == StreamType::audio ? AVMEDIA_TYPE_AUDIO : AVMEDIA_TYPE_VIDEO;

@@ -13,6 +13,11 @@ double MockFormatContext::stream_time_base(const int stream_index) const
     return stream_index == 0 ? video_time_base : audio_time_base;
 }
 
+const std::string MockFormatContext::format() const
+{
+    return "";
+}
+
 std::unique_ptr<StreamInfo> MockFormatContext::find_best_stream(Factory* factory, const StreamType type)
 {
     const int stream_index = type == StreamType::video ? 0 : 1;
