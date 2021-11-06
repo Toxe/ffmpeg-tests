@@ -12,9 +12,9 @@ class FFmpegCodecContext : public CodecContext {
 public:
     FFmpegCodecContext(AVStream* stream);
 
-    [[nodiscard]] int width() override;
-    [[nodiscard]] int height() override;
-    [[nodiscard]] AVPixelFormat pixel_format() override;
+    [[nodiscard]] int width() const override;
+    [[nodiscard]] int height() const override;
+    [[nodiscard]] AVPixelFormat pixel_format() const override;
 
     [[nodiscard]] virtual int send_packet(Packet* packet) override;
     [[nodiscard]] virtual std::unique_ptr<Frame> receive_frame(Factory* factory, const double time_base, const int scaled_width, const int scaled_height) override;

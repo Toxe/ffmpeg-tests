@@ -2,17 +2,17 @@
 
 #include "../../factory/factory.hpp"
 
-int MockCodecContext::width()
+int MockCodecContext::width() const
 {
     return 1920;
 }
 
-int MockCodecContext::height()
+int MockCodecContext::height() const
 {
     return 1080;
 }
 
-AVPixelFormat MockCodecContext::pixel_format()
+AVPixelFormat MockCodecContext::pixel_format() const
 {
     return AV_PIX_FMT_YUV420P;
 }

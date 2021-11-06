@@ -14,12 +14,12 @@ FFmpegPacket::FFmpegPacket()
         throw std::runtime_error("av_packet_alloc");
 }
 
-AVPacket* FFmpegPacket::packet()
+AVPacket* FFmpegPacket::packet() const
 {
     return packet_.get();
 }
 
-int FFmpegPacket::stream_index()
+int FFmpegPacket::stream_index() const
 {
     return packet_->stream_index;
 }

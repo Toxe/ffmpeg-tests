@@ -1,11 +1,11 @@
 #include "mock_packet.hpp"
 
-AVPacket* MockPacket::packet()
+AVPacket* MockPacket::packet() const
 {
     return nullptr;
 }
 
-int MockPacket::stream_index()
+int MockPacket::stream_index() const
 {
     return stream_index_;
 }

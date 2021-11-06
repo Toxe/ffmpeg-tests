@@ -41,17 +41,17 @@ FFmpegCodecContext::FFmpegCodecContext(AVStream* stream)
         throw std::runtime_error("avcodec_open2");
 }
 
-int FFmpegCodecContext::width()
+int FFmpegCodecContext::width() const
 {
     return codec_context_->width;
 }
 
-int FFmpegCodecContext::height()
+int FFmpegCodecContext::height() const
 {
     return codec_context_->height;
 }
 
-AVPixelFormat FFmpegCodecContext::pixel_format()
+AVPixelFormat FFmpegCodecContext::pixel_format() const
 {
     return codec_context_->pix_fmt;
 }
