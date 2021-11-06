@@ -4,9 +4,9 @@
 
 #include "../video_frame/video_frame.hpp"
 
-void VideoFrameQueue::push(std::unique_ptr<VideoFrame> frame)
+void VideoFrameQueue::push(std::unique_ptr<VideoFrame> video_frame)
 {
-    queue_.push_back(std::move(frame));
+    queue_.push_back(std::move(video_frame));
     std::sort(queue_.begin(), queue_.end(), [](const std::unique_ptr<VideoFrame>& left, const std::unique_ptr<VideoFrame>& right) { return left->timestamp() < right->timestamp(); });
 }
 
@@ -16,9 +16,9 @@ std::unique_ptr<VideoFrame> VideoFrameQueue::pop(double playback_position)
         return nullptr;
 
     if (queue_.front()->timestamp() <= playback_position) {
-        auto frame = std::move(queue_.front());
+        auto video_frame = std::move(queue_.front());
         queue_.erase(queue_.begin());
-        return frame;
+        return video_frame;
     } else {
         return nullptr;
     }

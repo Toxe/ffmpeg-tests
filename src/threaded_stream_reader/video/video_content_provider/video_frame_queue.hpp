@@ -10,7 +10,7 @@ class VideoFrameQueue {
     std::vector<std::unique_ptr<VideoFrame>> queue_;
 
 public:
-    void push(std::unique_ptr<VideoFrame> frame);
+    void push(std::unique_ptr<VideoFrame> video_frame);
     [[nodiscard]] std::unique_ptr<VideoFrame> pop(double playback_position);
 
     [[nodiscard]] int size() const;
