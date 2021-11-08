@@ -74,6 +74,8 @@ int main(int argc, char* argv[])
 
     log_debug("(main) main loop...");
 
+    bool changed_resolution = false;
+
     while (true) {
         // do some work
         std::this_thread::sleep_for(std::chrono::milliseconds(5));
@@ -98,6 +100,13 @@ int main(int argc, char* argv[])
             }
 
             do_something_with_the_frame(video_frame.get());
+
+            if (!changed_resolution && video_frame->timestamp() > 0.5) {
+                // change output resolution after 0.5 seconds
+                log_debug(fmt::format("(main) change resolution to 800x600"));
+                video_content_provider.change_scaling_dimensions(800, 600);
+                changed_resolution = true;
+            }
         }
 
         if (received_first_real_frame && frames_available == 0 && video_content_provider.has_finished())
