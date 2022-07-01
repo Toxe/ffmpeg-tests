@@ -9,7 +9,7 @@ class AudioWriter : public OutputWriter {
 
 public:
     AudioWriter(const char* filename);
-    ~AudioWriter();
+    ~AudioWriter() override;
 
     void write(AVCodecContext* codec_context, AVFrame* frame) override;
 };

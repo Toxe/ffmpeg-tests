@@ -7,5 +7,7 @@ extern "C" {
 
 class OutputWriter {
 public:
+    virtual ~OutputWriter() = default;
+
     virtual void write(AVCodecContext* codec_context, AVFrame* frame) = 0;
 };
