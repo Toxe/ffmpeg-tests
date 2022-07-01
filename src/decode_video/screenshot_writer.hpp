@@ -20,7 +20,7 @@ class ScreenshotWriter : public OutputWriter {
     SwsContext* scaling_context_ = nullptr;
 
 public:
-    ScreenshotWriter(const char* filename);
+    explicit ScreenshotWriter(const char* filename);
 
     void set_image_buffer(std::array<uint8_t*, 4>& img_buf_data, std::array<int, 4>& img_buf_linesize, int img_buf_size, std::array<uint8_t*, 4>& dst_buf_data, std::array<int, 4>& dst_buf_linesize, int dst_buf_size, SwsContext* scaling_context);
 

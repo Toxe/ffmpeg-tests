@@ -8,7 +8,7 @@ class AudioWriter : public OutputWriter {
     std::FILE* fp_;
 
 public:
-    AudioWriter(const char* filename);
+    explicit AudioWriter(const char* filename);
     ~AudioWriter() override;
 
     void write(AVCodecContext* codec_context, AVFrame* frame) override;
