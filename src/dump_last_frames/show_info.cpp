@@ -23,19 +23,14 @@ void show_frame_info(const AVFormatContext* format_context, const AVCodecContext
     const std::chrono::duration<double> dur{static_cast<double>(frame->pkt_duration) * stream_time_base};
     const std::chrono::duration<double> stream_duration = std::chrono::microseconds{format_context->duration};
 
-    if (codec_context->codec_type == AVMEDIA_TYPE_AUDIO) {
-        fmt::print("[{:.3f}s | {:.3f}s] {} frame     pts: {}, pkt_duration: {} ({:.5f}s), time_base: {}/{}\n",
-            pos.count(), stream_duration.count(), av_get_media_type_string(codec_context->codec_type),
-            frame->pts, frame->pkt_duration, dur.count(),
-            stream->time_base.num, stream->time_base.den);
-    } else if (codec_context->codec_type == AVMEDIA_TYPE_VIDEO) {
-        fmt::print("[{:.3f}s | {:.3f}s] {} frame [{}] pts: {}, pkt_duration: {} ({:.5f}s), time_base: {}/{}\n",
-            pos.count(), stream_duration.count(), av_get_media_type_string(codec_context->codec_type), av_get_picture_type_char(frame->pict_type),
-            frame->pts, frame->pkt_duration, dur.count(),
-            stream->time_base.num, stream->time_base.den);
-    } else {
-        fmt::print("unknown frame type\n");
-    }
+    fmt::print("[{:.3f}s | {:.3f}s] {} frame ", pos.count(), stream_duration.count(), av_get_media_type_string(codec_context->codec_type));
+
+    if (codec_context->codec_type == AVMEDIA_TYPE_VIDEO)
+        fmt::print("[{}] ", av_get_picture_type_char(frame->pict_type));
+    else
+        fmt::print("    ");
+
+    fmt::print("time_base: {}/{}, duration: {} ({:.5f}s), pts: {} / {} (-{})\n", stream->time_base.num, stream->time_base.den, frame->pkt_duration, dur.count(), frame->pts, stream->duration, stream->duration - frame->pts);
 }
 
 void show_packet_info(const AVCodecContext* codec_context, const AVPacket* packet)
