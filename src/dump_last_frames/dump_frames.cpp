@@ -17,7 +17,7 @@ extern "C" {
 
 using namespace std::literals::chrono_literals;
 
-[[nodiscard]] std::tuple<int, AutoDeleteResource<AVCodecContext>> find_best_stream(AVFormatContext* format_context, const AVMediaType type)
+[[nodiscard]] std::tuple<int, AutoDeleteResource<AVCodecContext>> find_best_stream(AVFormatContext* format_context, const AVMediaType type, bool use_threads)
 {
     const int stream_index = av_find_best_stream(format_context, type, -1, -1, nullptr, 0);
 
@@ -51,8 +51,10 @@ using namespace std::literals::chrono_literals;
         return std::make_tuple(-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr));
     }
 
-    // codec_context->thread_count = 0;
-    // codec_context->thread_type = FF_THREAD_FRAME;
+    if (use_threads) {
+        codec_context->thread_count = 0;
+        codec_context->thread_type = FF_THREAD_FRAME;
+    }
 
     // init decoder
     ret = avcodec_open2(codec_context.get(), decoder, nullptr);
@@ -121,7 +123,7 @@ int seek_position(AVFormatContext* format_context, AVCodecContext* audio_codec_c
     return 0;
 }
 
-int dump_frames(const std::string_view filename)
+int dump_frames(const std::string& filename, bool use_threads)
 {
     // allocate format context
     AutoDeleteResource<AVFormatContext> format_context = AutoDeleteResource<AVFormatContext>(avformat_alloc_context(), [](AVFormatContext* ctx) { avformat_close_input(&ctx); });
@@ -145,8 +147,8 @@ int dump_frames(const std::string_view filename)
     av_dump_format(format_context.get(), 0, filename.data(), 0);
 
     // find best audio and video stream
-    auto [audio_stream_index, audio_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_AUDIO);
-    auto [video_stream_index, video_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_VIDEO);
+    auto [audio_stream_index, audio_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_AUDIO, use_threads);
+    auto [video_stream_index, video_codec_context] = find_best_stream(format_context.get(), AVMEDIA_TYPE_VIDEO, use_threads);
 
     if (video_stream_index < 0)
         return show_error("unable to find video stream");

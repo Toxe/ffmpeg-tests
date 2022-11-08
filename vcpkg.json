@@ -12,6 +12,10 @@
             "version>=": "2.1.1"
         },
         {
+            "name": "cli11",
+            "version>=": "2.2.0"
+        },
+        {
             "name": "ffmpeg",
             "version>=": "4.4.1#13"
         },

@@ -1,5 +1,5 @@
 #pragma once
 
-#include <string_view>
+#include <string>
 
-int dump_frames(std::string_view filename);
+int dump_frames(const std::string& filename, bool use_threads);

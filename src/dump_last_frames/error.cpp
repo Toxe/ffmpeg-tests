@@ -1,7 +1,6 @@
 #include "error.hpp"
 
 #include <array>
-#include <cstdlib>
 
 #include "fmt/core.h"
 
@@ -23,10 +22,4 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
     }
 
     return ret_code;
-}
-
-[[noreturn]] void die(const std::string_view& error_message)
-{
-    show_error(error_message);
-    std::exit(1);
 }

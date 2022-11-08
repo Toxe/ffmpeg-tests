@@ -1,4 +1,6 @@
 add_executable(dump_last_frames
+    command_line.cpp
+    command_line.hpp
     auto_delete_resource.hpp
     dump_frames.cpp
     dump_frames.hpp
