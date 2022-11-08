@@ -5,5 +5,5 @@ int main(int argc, const char* argv[])
 {
     const CommandLine cli({argv, static_cast<std::size_t>(argc)});
 
-    return dump_frames(cli.filename(), cli.use_threads());
+    return dump_frames(cli.filename(), cli.use_threads(), cli.show_packets());
 }

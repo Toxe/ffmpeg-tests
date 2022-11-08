@@ -67,9 +67,10 @@ using namespace std::literals::chrono_literals;
     return std::make_tuple(stream_index, std::move(codec_context));
 }
 
-[[nodiscard]] int decode_packet(const AVFormatContext* format_context, AVCodecContext* codec_context, const AVPacket* packet, AVFrame* frame, VideoFrameWriter* video_frame_writer = nullptr)
+[[nodiscard]] int decode_packet(const AVFormatContext* format_context, AVCodecContext* codec_context, const AVPacket* packet, AVFrame* frame, bool show_packets, VideoFrameWriter* video_frame_writer = nullptr)
 {
-    // show_packet_info(codec_context, packet);
+    if (show_packets)
+        show_packet_info(format_context, codec_context, packet);
 
     // send packet to the decoder
     int ret = avcodec_send_packet(codec_context, packet);
@@ -123,7 +124,7 @@ int seek_position(AVFormatContext* format_context, AVCodecContext* audio_codec_c
     return 0;
 }
 
-int dump_frames(const std::string& filename, bool use_threads)
+int dump_frames(const std::string& filename, bool use_threads, bool show_packets)
 {
     // allocate format context
     AutoDeleteResource<AVFormatContext> format_context = AutoDeleteResource<AVFormatContext>(avformat_alloc_context(), [](AVFormatContext* ctx) { avformat_close_input(&ctx); });
@@ -182,9 +183,9 @@ int dump_frames(const std::string& filename, bool use_threads)
         if (ret >= 0) {
             // process only interesting packets, drop the rest
             if (packet->stream_index == audio_stream_index)
-                ret = decode_packet(format_context.get(), audio_codec_context.get(), packet.get(), frame.get());
+                ret = decode_packet(format_context.get(), audio_codec_context.get(), packet.get(), frame.get(), show_packets);
             else if (packet->stream_index == video_stream_index)
-                ret = decode_packet(format_context.get(), video_codec_context.get(), packet.get(), frame.get(), &video_frame_writer);
+                ret = decode_packet(format_context.get(), video_codec_context.get(), packet.get(), frame.get(), show_packets, &video_frame_writer);
 
             av_packet_unref(packet.get());
         }

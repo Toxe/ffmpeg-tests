@@ -20,6 +20,7 @@
 CommandLine::CommandLine(std::span<const char*> args)
 {
     CLI::App app{args[0]};
+    app.add_flag("-p,--packets", show_packets_, fmt::format("show packets (default: {})", show_packets_));
     app.add_flag("-t,--threads", use_threads_, fmt::format("use threads (default: {})", use_threads_));
     app.add_option("filename", filename_, "video file name")->required(true);
 
