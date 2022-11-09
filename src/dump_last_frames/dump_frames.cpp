@@ -67,41 +67,7 @@ using namespace std::literals::chrono_literals;
     return {stream_index, std::move(codec_context)};
 }
 
-[[nodiscard]] int decode_packet(const AVFormatContext* format_context, AVCodecContext* codec_context, const AVPacket* packet, AVFrame* frame, bool show_packets, VideoFrameWriter* video_frame_writer = nullptr)
-{
-    if (show_packets)
-        show_packet_info(format_context, codec_context, packet);
-
-    // send packet to the decoder
-    int ret = avcodec_send_packet(codec_context, packet);
-
-    if (ret < 0)
-        return show_error("avcodec_send_packet", ret);
-
-    // get all available frames from the decoder
-    while (ret >= 0) {
-        ret = avcodec_receive_frame(codec_context, frame);
-
-        if (ret < 0) {
-            if (ret == AVERROR_EOF || ret == AVERROR(EAGAIN))
-                return 0;
-
-            return show_error("avcodec_receive_frame", ret);
-        }
-
-        show_frame_info(format_context, codec_context, packet->stream_index, frame);
-
-        // write video frame to file
-        if (video_frame_writer)
-            video_frame_writer->write(codec_context, frame);
-
-        av_frame_unref(frame);
-    }
-
-    return 0;
-}
-
-int seek_position(AVFormatContext* format_context, AVCodecContext* audio_codec_context, AVCodecContext* video_codex_context, std::chrono::seconds seconds_from_end)
+int seek_position(AVFormatContext* format_context, AVCodecContext* audio_codec_context, AVCodecContext* video_codex_context, const std::chrono::seconds seconds_from_end)
 {
     static_assert(AV_TIME_BASE == 1'000'000);
 
@@ -124,7 +90,76 @@ int seek_position(AVFormatContext* format_context, AVCodecContext* audio_codec_c
     return 0;
 }
 
-int dump_frames(const std::string& filename, bool use_threads, bool show_packets)
+[[nodiscard]] int decode_packet(const AVFormatContext* format_context, AVCodecContext* codec_context, const AVPacket* packet, AVFrame* frame, const bool show_packets, VideoFrameWriter* video_frame_writer = nullptr)
+{
+    if (show_packets && packet->pts >= 0)
+        show_packet_info(format_context, codec_context, packet);
+
+    // send packet to the decoder
+    int ret = avcodec_send_packet(codec_context, packet);
+
+    if (ret < 0)
+        return show_error("avcodec_send_packet", ret);
+
+    // get all available frames from the decoder
+    while (true) {
+        ret = avcodec_receive_frame(codec_context, frame);
+
+        if (ret == AVERROR(EAGAIN))
+            return 0;  // ignore and keep reading frames
+        else if (ret == AVERROR_EOF)
+            return AVERROR_EOF;  // we reached EOF, signal that there are no more frames
+        else if (ret < 0)
+            return show_error("avcodec_receive_frame", ret);
+
+        show_frame_info(format_context, codec_context, packet->stream_index, frame);
+
+        // write video frame to file
+        if (video_frame_writer)
+            video_frame_writer->write(codec_context, frame);
+
+        av_frame_unref(frame);
+    }
+}
+
+int read_all_frames(AVFormatContext* format_context, AVCodecContext* audio_codec_context, AVCodecContext* video_codec_context, const int audio_stream_index, const int video_stream_index, VideoFrameWriter& video_frame_writer, const bool show_packets)
+{
+    // alloc frame and packet
+    const AutoDeleteResource<AVFrame> frame(av_frame_alloc(), [](AVFrame* p) { av_frame_free(&p); });
+
+    if (!frame)
+        return show_error("av_frame_alloc");
+
+    AutoDeleteResource<AVPacket> packet(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
+
+    if (!packet)
+        return show_error("av_packet_alloc");
+
+    while (true) {
+        int ret = av_read_frame(format_context, packet.get());
+
+        if (ret < 0 && ret != AVERROR_EOF) {
+            // ignore EOF until decode_packet() signals that we reached EOF and there are no more frames
+            show_error("av_read_frame", ret);
+            break;
+        }
+
+        // process only interesting packets, drop the rest
+        if (packet->stream_index == audio_stream_index)
+            ret = decode_packet(format_context, audio_codec_context, packet.get(), frame.get(), show_packets);
+        else if (packet->stream_index == video_stream_index)
+            ret = decode_packet(format_context, video_codec_context, packet.get(), frame.get(), show_packets, &video_frame_writer);
+
+        av_packet_unref(packet.get());
+
+        if (ret < 0)
+            break;
+    }
+
+    return 0;
+}
+
+int dump_frames(const std::string& filename, const bool use_threads, const bool show_packets)
 {
     // allocate format context
     AutoDeleteResource<AVFormatContext> format_context = AutoDeleteResource<AVFormatContext>(avformat_alloc_context(), [](AVFormatContext* ctx) { avformat_close_input(&ctx); });
@@ -154,17 +189,6 @@ int dump_frames(const std::string& filename, bool use_threads, bool show_packets
     if (video_stream_index < 0)
         return show_error("unable to find video stream");
 
-    // alloc frame and packet
-    const AutoDeleteResource<AVFrame> frame(av_frame_alloc(), [](AVFrame* p) { av_frame_free(&p); });
-
-    if (!frame)
-        return show_error("av_frame_alloc");
-
-    AutoDeleteResource<AVPacket> packet(av_packet_alloc(), [](AVPacket* p) { av_packet_free(&p); });
-
-    if (!packet)
-        return show_error("av_packet_alloc");
-
     // video frame writer
     VideoFrameWriter video_frame_writer("frame.raw", video_codec_context.get());
 
@@ -174,22 +198,5 @@ int dump_frames(const std::string& filename, bool use_threads, bool show_packets
     if (ret < 0)
         return ret;
 
-    // read frames from file
-    ret = 0;
-
-    while (ret >= 0) {
-        ret = av_read_frame(format_context.get(), packet.get());
-
-        if (ret >= 0) {
-            // process only interesting packets, drop the rest
-            if (packet->stream_index == audio_stream_index)
-                ret = decode_packet(format_context.get(), audio_codec_context.get(), packet.get(), frame.get(), show_packets);
-            else if (packet->stream_index == video_stream_index)
-                ret = decode_packet(format_context.get(), video_codec_context.get(), packet.get(), frame.get(), show_packets, &video_frame_writer);
-
-            av_packet_unref(packet.get());
-        }
-    }
-
-    return 0;
+    return read_all_frames(format_context.get(), audio_codec_context.get(), video_codec_context.get(), audio_stream_index, video_stream_index, video_frame_writer, show_packets);
 }
