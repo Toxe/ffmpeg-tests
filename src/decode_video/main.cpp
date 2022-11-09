@@ -178,7 +178,7 @@ int show_error(const std::string_view& error_message, std::optional<int> error_c
 
     const int dst_buf_size = av_image_alloc(dst_buf_data.data(), dst_buf_linesize.data(), video_codec_context->width, video_codec_context->height, AV_PIX_FMT_RGB24, 1);
 
-    if (img_buf_size < 0)
+    if (dst_buf_size < 0)
         return show_error("av_image_alloc", dst_buf_size);
 
     // create scaling context
