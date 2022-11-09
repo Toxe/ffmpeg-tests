@@ -23,7 +23,7 @@ using namespace std::literals::chrono_literals;
 
     if (stream_index < 0) {
         show_error(fmt::format("av_find_best_stream [{}]", av_get_media_type_string(type)), stream_index);
-        return std::make_tuple(-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr));
+        return {-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr)};
     }
 
     // find decoder for stream
@@ -32,7 +32,7 @@ using namespace std::literals::chrono_literals;
 
     if (!decoder) {
         show_error(fmt::format("avcodec_find_decoder [{}]", av_get_media_type_string(type)));
-        return std::make_tuple(-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr));
+        return {-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr)};
     }
 
     // allocate codec context for decoder
@@ -40,7 +40,7 @@ using namespace std::literals::chrono_literals;
 
     if (!codec_context) {
         show_error(fmt::format("avcodec_alloc_context3 [{}]", av_get_media_type_string(type)));
-        return std::make_tuple(-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr));
+        return {-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr)};
     }
 
     // copy codec parameters from input stream to codec context
@@ -48,7 +48,7 @@ using namespace std::literals::chrono_literals;
 
     if (ret < 0) {
         show_error(fmt::format("avcodec_parameters_to_context [{}]", av_get_media_type_string(type)), ret);
-        return std::make_tuple(-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr));
+        return {-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr)};
     }
 
     if (use_threads) {
@@ -61,10 +61,10 @@ using namespace std::literals::chrono_literals;
 
     if (ret < 0) {
         show_error(fmt::format("avcodec_open2 [{}]", av_get_media_type_string(type)), ret);
-        return std::make_tuple(-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr));
+        return {-1, AutoDeleteResource<AVCodecContext>(nullptr, nullptr)};
     }
 
-    return std::make_tuple(stream_index, std::move(codec_context));
+    return {stream_index, std::move(codec_context)};
 }
 
 [[nodiscard]] int decode_packet(const AVFormatContext* format_context, AVCodecContext* codec_context, const AVPacket* packet, AVFrame* frame, bool show_packets, VideoFrameWriter* video_frame_writer = nullptr)
