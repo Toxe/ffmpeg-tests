@@ -187,30 +187,28 @@ error: av_find_best_stream [audio] (Stream not found)
 
 ## Build
 
-Default build instructions for CMake and Vcpkg. These examples assume that Vcpkg is installed in your home directory. Adjust the paths if necessary.
+Example build instructions for CMake and Vcpkg. These examples assume that Vcpkg is installed in your home directory.
+Adjust the paths if necessary.
 
 #### Vcpkg toolchain
 
-Pass your Vcpkg toolchain file via `CMAKE_TOOLCHAIN_FILE`, for example on Windows:  
-`-DCMAKE_TOOLCHAIN_FILE=%HOMEPATH%\vcpkg\scripts\buildsystems\vcpkg.cmake`
+Pass the Vcpkg toolchain file via `CMAKE_TOOLCHAIN_FILE`.
 
-Or on Unix systems:  
-`-DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake`
+- Windows: `-DCMAKE_TOOLCHAIN_FILE=%HOMEPATH%\vcpkg\scripts\buildsystems\vcpkg.cmake`
+- Unix systems: `-DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake`
 
-### Linux + Mac
+### Linux & Mac
 
 ```
 $ mkdir build
-$ cd build
-$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake ..
-$ ninja
+$ cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=$HOME/vcpkg/scripts/buildsystems/vcpkg.cmake -B build
+$ cmake --build build
 ```
 
 ### Windows
 
 ```
-$ mkdir build
-$ cd build
-$ cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=%HOMEPATH%\vcpkg\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows ..
-$ cmake --build . --config Release
+PS> mkdir build
+PS> cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE="$HOME\vcpkg\scripts\buildsystems\vcpkg.cmake" -B build
+PS> cmake --build build --config Release
 ```
